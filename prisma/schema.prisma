@@ -1,0 +1,447 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Project {
+  id                     String   @id @default(cuid())
+  name                   String
+  slug                   String   @unique
+  description            String   @default("")
+  rootPath               String
+  defaultAspectRatio     String   @default("16:9")
+  defaultResolution      String   @default("1536x864")
+  defaultProvider        String   @default("gemini")
+  defaultDraftModel      String   @default("gemini-3.1-flash-image")
+  defaultProductionModel String   @default("gemini-3.1-flash-image")
+  createdAt              DateTime @default(now())
+  updatedAt              DateTime @updatedAt
+
+  characters    Character[]
+  locations     Location[]
+  styleProfiles StyleProfile[]
+  scenes        Scene[]
+  props         Prop[]
+  modelPricing  ModelPricing[]
+}
+
+model Character {
+  id                  String   @id @default(cuid())
+  projectId           String
+  name                String
+  slug                String
+  description         String   @default("")
+  age                 String   @default("")
+  height              String   @default("")
+  bodyDescription     String   @default("")
+  faceDescription     String   @default("")
+  hairDescription     String   @default("")
+  distinctiveFeatures String   @default("")
+  immutableFeatures   String   @default("")
+  masterReferenceId   String?
+  status              String   @default("DRAFT")
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+
+  project    Project              @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  references CharacterReference[]
+  outfits    Outfit[]
+  frames     FrameCharacter[]
+  scenes     SceneCharacter[]
+
+  @@unique([projectId, slug])
+}
+
+model CharacterReference {
+  id          String   @id @default(cuid())
+  characterId String
+  type        String
+  version     Int      @default(1)
+  code        String
+  filePath    String
+  description String   @default("")
+  status      String   @default("DRAFT")
+  isCanonical Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  character Character @relation(fields: [characterId], references: [id], onDelete: Cascade)
+  frameSelections FrameCharacterReferenceSelection[]
+
+  @@unique([characterId, code])
+}
+
+model Outfit {
+  id                String  @id @default(cuid())
+  characterId       String
+  name              String
+  slug              String
+  description       String  @default("")
+  immutableFeatures String  @default("")
+  status            String  @default("DRAFT")
+  masterReferenceId String?
+
+  character  Character         @relation(fields: [characterId], references: [id], onDelete: Cascade)
+  references OutfitReference[]
+
+  @@unique([characterId, slug])
+}
+
+model OutfitReference {
+  id          String   @id @default(cuid())
+  outfitId    String
+  type        String
+  version     Int      @default(1)
+  code        String
+  filePath    String
+  description String   @default("")
+  status      String   @default("DRAFT")
+  isCanonical Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  outfit Outfit @relation(fields: [outfitId], references: [id], onDelete: Cascade)
+
+  @@unique([outfitId, code])
+}
+
+model Location {
+  id                      String  @id @default(cuid())
+  projectId               String
+  name                    String
+  slug                    String
+  description             String  @default("")
+  architectureDescription String  @default("")
+  immutableFeatures       String  @default("")
+  masterReferenceId       String?
+  floorPlanReferenceId    String?
+  status                  String  @default("DRAFT")
+
+  project    Project             @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  references LocationReference[]
+  angles     LocationAngle[]
+  scenes     Scene[]
+  frames     Frame[]
+
+  @@unique([projectId, slug])
+}
+
+model LocationReference {
+  id          String   @id @default(cuid())
+  locationId  String
+  type        String
+  version     Int      @default(1)
+  code        String
+  filePath    String
+  description String   @default("")
+  status      String   @default("DRAFT")
+  isCanonical Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  location Location @relation(fields: [locationId], references: [id], onDelete: Cascade)
+
+  @@unique([locationId, code])
+}
+
+model LocationAngle {
+  id                        String  @id @default(cuid())
+  locationId                String
+  name                      String
+  slug                      String
+  description               String  @default("")
+  cameraPositionDescription String  @default("")
+  referenceId               String?
+  status                    String  @default("DRAFT")
+
+  location   Location                 @relation(fields: [locationId], references: [id], onDelete: Cascade)
+  references LocationAngleReference[]
+  frames     Frame[]
+
+  @@unique([locationId, slug])
+}
+
+model Prop {
+  id                String  @id @default(cuid())
+  projectId         String
+  name              String
+  slug              String
+  description       String  @default("")
+  masterReferenceId String?
+  status            String  @default("DRAFT")
+
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@unique([projectId, slug])
+}
+
+model StyleProfile {
+  id               String @id @default(cuid())
+  projectId        String
+  name             String
+  slug             String
+  description      String @default("")
+  linework         String @default("")
+  anatomy          String @default("")
+  faces            String @default("")
+  shading          String @default("")
+  colorPalette     String @default("")
+  backgroundDetail String @default("")
+  lighting         String @default("")
+  cameraLanguage   String @default("")
+  negativeRules    String @default("")
+  status           String @default("DRAFT")
+
+  project    Project          @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  references StyleReference[]
+  frames     Frame[]
+  scenes     Scene[]
+
+  @@unique([projectId, slug])
+}
+
+model StyleReference {
+  id             String   @id @default(cuid())
+  styleProfileId String
+  version        Int      @default(1)
+  code           String
+  filePath       String
+  description    String   @default("")
+  status         String   @default("DRAFT")
+  isCanonical    Boolean  @default(false)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  styleProfile StyleProfile @relation(fields: [styleProfileId], references: [id], onDelete: Cascade)
+
+  @@unique([styleProfileId, code])
+}
+
+model Scene {
+  id              String  @id @default(cuid())
+  projectId       String
+  chapterId       String  @default("")
+  sequence        Int
+  name            String
+  description     String  @default("")
+  locationId      String?
+  styleProfileId  String?
+  timeDescription String  @default("")
+  previousSceneId String?
+
+  project      Project          @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  location     Location?        @relation(fields: [locationId], references: [id], onDelete: SetNull)
+  styleProfile StyleProfile?    @relation(fields: [styleProfileId], references: [id], onDelete: SetNull)
+  characters   SceneCharacter[]
+  storyState   StoryState?
+  frames       Frame[]
+  screens      Screen[]
+
+  @@unique([projectId, sequence])
+}
+
+model SceneCharacter {
+  id          String @id @default(cuid())
+  sceneId     String
+  characterId String
+  order       Int    @default(1)
+
+  scene     Scene     @relation(fields: [sceneId], references: [id], onDelete: Cascade)
+  character Character @relation(fields: [characterId], references: [id], onDelete: Cascade)
+
+  @@unique([sceneId, characterId])
+  @@unique([sceneId, order])
+}
+
+model StoryState {
+  id        String   @id @default(cuid())
+  sceneId   String   @unique
+  document  String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  scene Scene @relation(fields: [sceneId], references: [id], onDelete: Cascade)
+}
+
+model Frame {
+  id                   String   @id @default(cuid())
+  sceneId              String
+  sequence             Int
+  frameCode            String   @unique
+  type                 String   @default("CG")
+  status               String   @default("DRAFT")
+  generationStrategy   String   @default("NEW_COMPOSITION")
+  continuityEditContract String @default("{\"changes\":[],\"forbidden\":[],\"allowedChanges\":[]}")
+  description          String   @default("")
+  action               String   @default("")
+  camera               String   @default("")
+  composition          String   @default("")
+  lighting             String   @default("")
+  expressionNotes      String   @default("")
+  continuityNotes      String   @default("")
+  previousFrameId      String?
+  selectedGenerationId String?
+  locationId           String?
+  locationAngleId      String?
+  styleProfileId       String?
+  targetWidth          Int?
+  targetHeight         Int?
+  targetAspectRatio    Float?
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
+
+  scene         Scene            @relation(fields: [sceneId], references: [id], onDelete: Cascade)
+  location      Location?        @relation(fields: [locationId], references: [id], onDelete: SetNull)
+  locationAngle LocationAngle?   @relation(fields: [locationAngleId], references: [id], onDelete: SetNull)
+  styleProfile  StyleProfile?    @relation(fields: [styleProfileId], references: [id], onDelete: SetNull)
+  characters    FrameCharacter[]
+  generations   Generation[]
+  panels        Panel[]
+
+  @@unique([sceneId, sequence])
+}
+
+model FrameCharacter {
+  id          String @id @default(cuid())
+  frameId     String
+  characterId String
+  order       Int    @default(1)
+
+  frame     Frame     @relation(fields: [frameId], references: [id], onDelete: Cascade)
+  character Character @relation(fields: [characterId], references: [id], onDelete: Cascade)
+  additionalReferences FrameCharacterReferenceSelection[]
+
+  @@unique([frameId, characterId])
+  @@unique([frameId, order])
+}
+
+model FrameCharacterReferenceSelection {
+  id                   String @id @default(cuid())
+  frameCharacterId     String
+  characterReferenceId String
+  order                Int
+
+  frameCharacter     FrameCharacter     @relation(fields: [frameCharacterId], references: [id], onDelete: Cascade)
+  characterReference CharacterReference @relation(fields: [characterReferenceId], references: [id], onDelete: Cascade)
+
+  @@unique([frameCharacterId, characterReferenceId])
+  @@unique([frameCharacterId, order])
+}
+
+model LocationAngleReference {
+  id              String   @id @default(cuid())
+  locationAngleId String
+  type            String   @default("VIEW")
+  version         Int      @default(1)
+  code            String
+  filePath        String
+  description     String   @default("")
+  status          String   @default("DRAFT")
+  isCanonical     Boolean  @default(false)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  locationAngle LocationAngle @relation(fields: [locationAngleId], references: [id], onDelete: Cascade)
+
+  @@unique([locationAngleId, code])
+}
+
+model Screen {
+  id        String   @id @default(cuid())
+  sceneId   String
+  sequence  Int
+  code      String   @unique
+  width     Int?
+  height    Int?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  scene     Scene    @relation(fields: [sceneId], references: [id], onDelete: Cascade)
+  panels    Panel[]
+
+  @@unique([sceneId, sequence])
+}
+
+model Panel {
+  id       String @id @default(cuid())
+  screenId String
+  frameId  String
+  sequence Int
+  x        Int?
+  y        Int?
+  width    Int
+  height   Int
+  zIndex   Int?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  screen   Screen @relation(fields: [screenId], references: [id], onDelete: Cascade)
+  frame    Frame  @relation(fields: [frameId], references: [id], onDelete: Cascade)
+
+  @@unique([screenId, sequence])
+}
+
+model Generation {
+  id                 String    @id @default(cuid())
+  frameId            String
+  provider           String
+  model              String
+  prompt             String
+  status             String    @default("PENDING")
+  outputFilePath     String    @default("")
+  resolution         String
+  aspectRatio        String
+  estimatedCost      Float?
+  targetWidth        Int?
+  targetHeight       Int?
+  targetAspectRatio  Float?
+  requiresCrop       Boolean @default(false)
+  cropStrategy       String  @default("NONE")
+  parentGenerationId String?
+  generationType     String    @default("INITIAL")
+  rawMetadata        String?
+  storyStateSnapshot String
+  frameSnapshot      String
+  createdAt          DateTime  @default(now())
+  completedAt        DateTime?
+
+  frame      Frame                 @relation(fields: [frameId], references: [id], onDelete: Cascade)
+  references GenerationReference[]
+}
+
+model GenerationReference {
+  id            String @id @default(cuid())
+  generationId  String
+  referenceKind String
+  referenceId   String
+  code          String
+  filePath      String
+  priority      Int
+
+  generation Generation @relation(fields: [generationId], references: [id], onDelete: Cascade)
+}
+
+model ModelPricing {
+  id            String @id @default(cuid())
+  projectId     String
+  provider      String
+  model         String
+  estimatedCost Float
+  notes         String @default("")
+
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@unique([projectId, provider, model])
+}
+
+model ProjectRegistryEntry {
+  id           String    @id
+  name         String
+  projectPath  String    @unique
+  lastOpenedAt DateTime?
+  createdAt    DateTime  @default(now())
+}

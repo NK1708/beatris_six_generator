@@ -1,19 +1,65 @@
-import fs from "node:fs/promises";
 import path from "node:path";
+import type { Prisma } from "@prisma/client";
 import { detectStructuredContinuityChanges, effectiveAllowedChanges, GenerationGeometryResolver, generationFileName, PromptBuilder, ReferenceResolver } from "@bearridge/core";
-import type { GenerationMode, GenerationType, ReferenceAsset } from "@bearridge/shared";
+import type { FrameGenerationReadiness, GenerationMode, GenerationType, ImageProvider, ReferenceAsset } from "@bearridge/shared";
 import { config } from "../config.js";
-import { projectDbManager } from "../db.js";
+import { projectDbManager, type ProjectContext } from "../db.js";
 import { AppError } from "../errors.js";
 import { logger } from "../logger.js";
-import { createImageProvider, getImageProviderCapabilities } from "../providers/providerFactory.js";
+import { createImageProvider, getImageProviderCapabilities, type ImageProviderFactoryOptions } from "../providers/providerFactory.js";
 import { FileService } from "./fileService.js";
 import { loadFrameContext } from "./contextService.js";
+import { validateVisualBaseFile } from "./visualBaseValidation.js";
+import { resolveFrameGenerationReadinessForProject } from "./frameGenerationReadinessService.js";
+import { assertReadinessTokenCurrent, ProductionGenerationGate } from "./productionGenerationGate.js";
+import { prepareProductionGenerationContext, type PreparedProductionGenerationContext } from "./productionGenerationContext.js";
+import { resolveProjectFileForWrite } from "./projectPathResolver.js";
 
 const fileService = new FileService();
 
+export interface GenerationServiceDependencies {
+  createProvider(options: ImageProviderFactoryOptions): ImageProvider;
+  resolveReadiness(prisma: Parameters<typeof resolveFrameGenerationReadinessForProject>[0], projectPath: string, frameId: string): Promise<FrameGenerationReadiness>;
+  beforeGenerationClaim?(): Promise<void>;
+}
+
+const defaultDependencies: GenerationServiceDependencies = {
+  createProvider: createImageProvider,
+  resolveReadiness: resolveFrameGenerationReadinessForProject
+};
+
 export async function previewFrame(frameId: string) {
-  const context = await loadFrameContext(frameId);
+  const lease = projectDbManager.acquireActiveProject();
+  try {
+    const context = await loadFrameContext(frameId, lease);
+    return previewFrameContext(context, lease);
+  } finally {
+    await lease.release();
+  }
+}
+
+export async function previewProductionFrame(
+  frameId: string,
+  dependencies: Pick<GenerationServiceDependencies, "resolveReadiness"> = defaultDependencies
+) {
+  const lease = projectDbManager.acquireActiveProject();
+  try {
+    const readiness = await new ProductionGenerationGate(() => dependencies.resolveReadiness(
+      lease.prisma,
+      lease.projectPath,
+      frameId
+    )).open();
+    const prepared = prepareProductionGenerationContext(await loadFrameContext(frameId, lease), readiness);
+    return { ...await previewFrameContext(prepared.context, lease), productionTarget: productionTargetMetadata(prepared) };
+  } finally {
+    await lease.release();
+  }
+}
+
+export async function previewFrameContext(
+  context: Awaited<ReturnType<typeof loadFrameContext>>,
+  projectContext: ProjectContext = projectDbManager.getActiveProject()
+) {
   const resolved = new ReferenceResolver().resolve(context);
   const model = config.imageProvider === "openai" ? config.openaiImageModel : context.project.defaultDraftModel;
   const geometry = new GenerationGeometryResolver().resolve({
@@ -46,25 +92,58 @@ export async function previewFrame(frameId: string) {
     : [];
   const allowedContinuityChanges = effectiveAllowedChanges(detectedContinuityChanges, context.frame.continuityEditContract.allowedChanges);
   const continuationError = strategy === "CONTINUE_PREVIOUS_FRAME"
-    ? await continuationValidationError(context, previousReferences)
+    ? await continuationValidationError(context, previousReferences, projectContext)
     : undefined;
   const warnings = [...resolved.warnings];
   if (continuationError) {
-    warnings.push({ code: "INVALID_CONTINUATION_BASE", entityId: frameId, message: continuationError, severity: "blocking" });
+    warnings.push({ code: "INVALID_CONTINUATION_BASE", entityId: context.frame.id, message: continuationError, severity: "blocking" });
   } else if (strategy === "CONTINUE_PREVIOUS_FRAME" && !getImageProviderCapabilities(config.imageProvider).trueEdit) {
-    warnings.push({ code: "PROVIDER_EDIT_UNSUPPORTED", entityId: frameId, message: `Provider ${config.imageProvider} does not support true image editing.`, severity: "blocking" });
+    warnings.push({ code: "PROVIDER_EDIT_UNSUPPORTED", entityId: context.frame.id, message: `Provider ${config.imageProvider} does not support true image editing.`, severity: "blocking" });
   }
   return { context, strategy, references, baseReference, deltaInstructions, detectedContinuityChanges, allowedContinuityChanges, warnings, prompt, geometry };
 }
 
-export async function generateFrame(frameId: string, mode: GenerationMode, generationType: GenerationType = "INITIAL") {
+export async function generateFrame(
+  frameId: string,
+  mode: GenerationMode,
+  generationType: GenerationType = "INITIAL",
+  dependencies: GenerationServiceDependencies = defaultDependencies
+) {
+  const lease = projectDbManager.acquireActiveProject();
+  try {
+    return await generateFrameInProject(lease, frameId, mode, generationType, dependencies);
+  } finally {
+    await lease.release();
+  }
+}
+
+async function generateFrameInProject(
+  activeProject: ProjectContext,
+  frameId: string,
+  mode: GenerationMode,
+  generationType: GenerationType,
+  dependencies: GenerationServiceDependencies
+) {
   const started = Date.now();
-  const preview = await previewFrame(frameId);
+  const productionGate = mode === "production"
+    ? new ProductionGenerationGate(() => dependencies.resolveReadiness(
+        activeProject.prisma,
+        activeProject.projectPath,
+        frameId
+      ))
+    : undefined;
+  const initialReadiness = productionGate ? await productionGate.open() : undefined;
+  const preparedProduction = initialReadiness
+    ? prepareProductionGenerationContext(await loadFrameContext(frameId, activeProject), initialReadiness)
+    : undefined;
+  const preview = preparedProduction
+    ? await previewFrameContext(preparedProduction.context)
+    : await previewFrameContext(await loadFrameContext(frameId, activeProject), activeProject);
   const blockingWarnings = preview.warnings.filter((warning) => warning.severity === "blocking");
   if (mode === "production" && blockingWarnings.length) {
     throw new AppError(`Production generation blocked: ${blockingWarnings.map((warning) => warning.message).join(" ")}`, 400, "PRODUCTION_CONTEXT_INCOMPLETE");
   }
-  const { prisma } = projectDbManager.getActiveProject();
+  const { prisma } = activeProject;
   const project = await prisma.project.findUnique({ where: { id: preview.context.project.id } });
   if (!project) {
     throw new AppError("Project not found.", 404, "NOT_FOUND");
@@ -76,15 +155,17 @@ export async function generateFrame(frameId: string, mode: GenerationMode, gener
   const effectiveGenerationType: GenerationType = preview.strategy === "CONTINUE_PREVIOUS_FRAME" ? "EDIT" : generationType;
   const fileName = generationFileName(preview.context.frame.frameCode, existingCount + 1, effectiveGenerationType);
   const relativeOutputPath = path.posix.join("generations", preview.context.frame.frameCode, fileName);
-  const absoluteOutputPath = path.join(project.rootPath, relativeOutputPath);
+  const projectRoot = activeProject.projectPath;
+  const absoluteOutputPath = await resolveProjectFileForWrite(projectRoot, relativeOutputPath);
 
-  const provider = createImageProvider({
+  const provider = dependencies.createProvider({
     provider: config.imageProvider,
     geminiApiKey: config.geminiApiKey,
     openaiApiKey: config.openaiApiKey,
     model,
     outputFilePath: absoluteOutputPath,
-    rootPath: project.rootPath
+    rootPath: projectRoot,
+    legacyRootPath: project.rootPath
   });
   if (preview.strategy === "CONTINUE_PREVIOUS_FRAME") {
     const continuationWarning = preview.warnings.find((warning) => warning.code === "INVALID_CONTINUATION_BASE");
@@ -94,8 +175,11 @@ export async function generateFrame(frameId: string, mode: GenerationMode, gener
     }
   }
 
-  const generation = await prisma.generation.create({
-    data: {
+  const confirmedReadiness = productionGate && initialReadiness
+    ? await productionGate.revalidate(initialReadiness)
+    : undefined;
+  await dependencies.beforeGenerationClaim?.();
+  const generationData = {
       frameId,
       provider: config.imageProvider,
       model,
@@ -111,12 +195,24 @@ export async function generateFrame(frameId: string, mode: GenerationMode, gener
       cropStrategy: preview.geometry.cropStrategy,
       generationType: effectiveGenerationType,
       parentGenerationId: preview.strategy === "CONTINUE_PREVIOUS_FRAME" ? (preview.context.previousLockedFrame?.generationId ?? null) : null,
-      storyStateSnapshot: JSON.stringify(preview.context.storyState),
-      frameSnapshot: JSON.stringify(preview.context.frame)
-    }
-  });
-
-  await prisma.frame.update({ where: { id: frameId }, data: { status: "GENERATING" } });
+      storyStateSnapshot: JSON.stringify(preparedProduction?.targetStoryState ?? preview.context.storyState),
+      frameSnapshot: JSON.stringify(preview.context.frame),
+      rawMetadata: preparedProduction
+        ? JSON.stringify({ productionTarget: productionTargetMetadata(preparedProduction) })
+        : null
+  };
+  const generation = confirmedReadiness
+    ? await prisma.$transaction(async (transaction) => {
+        await assertReadinessTokenCurrent(transaction, confirmedReadiness);
+        await claimFrameForGeneration(transaction, frameId, preview.context.frameTargetStoryState, preview.context.frame.characterCastRevision ?? 0);
+        const created = await transaction.generation.create({ data: generationData });
+        return created;
+      })
+    : await prisma.$transaction(async (transaction) => {
+        await claimFrameForGeneration(transaction, frameId, preview.context.frameTargetStoryState, preview.context.frame.characterCastRevision ?? 0);
+        const created = await transaction.generation.create({ data: generationData });
+        return created;
+      });
 
   try {
     const request = {
@@ -143,7 +239,8 @@ export async function generateFrame(frameId: string, mode: GenerationMode, gener
       baseImagePath: preview.baseReference?.filePath ?? null,
       supportingReferenceIds: preview.references.map((reference) => reference.id),
       deltaInstructions: preview.deltaInstructions ?? null,
-      providerMetadata: result.rawMetadata
+      providerMetadata: result.rawMetadata,
+      ...(preparedProduction ? { productionTarget: productionTargetMetadata(preparedProduction) } : {})
     };
 
     const successData = {
@@ -179,7 +276,7 @@ export async function generateFrame(frameId: string, mode: GenerationMode, gener
         }))
       ]
     });
-    await fileService.writeJsonBeside(project.rootPath, result.outputFilePath, {
+    await fileService.writeJsonBeside(projectRoot, result.outputFilePath, {
       provider: result.provider,
       model: result.model,
       frame: preview.context.frame.frameCode,
@@ -189,7 +286,8 @@ export async function generateFrame(frameId: string, mode: GenerationMode, gener
         kind: reference.kind,
         role: reference.role ?? null
       })),
-      storyState: preview.context.storyState,
+      storyState: preparedProduction?.targetStoryState ?? preview.context.storyState,
+      ...(preparedProduction ? { productionTarget: productionTargetMetadata(preparedProduction) } : {}),
       frameSnapshot: preview.context.frame,
       strategy: preview.strategy,
       baseFrameId: preview.context.previousLockedFrame?.id ?? null,
@@ -207,7 +305,7 @@ export async function generateFrame(frameId: string, mode: GenerationMode, gener
       },
       timestamp: result.createdAt.toISOString()
     });
-    await prisma.frame.update({ where: { id: frameId }, data: { status: "REVIEW" } });
+    await prisma.frame.updateMany({ where: { id: frameId, status: { not: "LOCKED" } }, data: { status: "REVIEW" } });
 
     logger.info({
       frameId,
@@ -225,10 +323,13 @@ export async function generateFrame(frameId: string, mode: GenerationMode, gener
       where: { id: generation.id },
       data: {
         status: "FAILED",
-        rawMetadata: JSON.stringify({ message: error instanceof Error ? error.message : "Unknown generation error" })
+        rawMetadata: JSON.stringify({
+          message: error instanceof Error ? error.message : "Unknown generation error",
+          ...(preparedProduction ? { productionTarget: productionTargetMetadata(preparedProduction) } : {})
+        })
       }
     });
-    await prisma.frame.update({ where: { id: frameId }, data: { status: "DRAFT" } });
+    await prisma.frame.updateMany({ where: { id: frameId, status: { not: "LOCKED" } }, data: { status: "DRAFT" } });
     logger.error({
       frameId,
       provider: config.imageProvider,
@@ -242,9 +343,66 @@ export async function generateFrame(frameId: string, mode: GenerationMode, gener
   }
 }
 
-async function continuationValidationError(context: Awaited<ReturnType<typeof loadFrameContext>>, previousReferences: ReferenceAsset[]): Promise<string | undefined> {
+async function claimFrameForGeneration(
+  prisma: Prisma.TransactionClient,
+  frameId: string,
+  target: Awaited<ReturnType<typeof loadFrameContext>>["frameTargetStoryState"],
+  characterCastRevision: number
+): Promise<void> {
+  const claimed = target.status === "AVAILABLE"
+    ? await prisma.$executeRaw`
+        UPDATE "Frame"
+        SET "status" = 'GENERATING', "updatedAt" = CURRENT_TIMESTAMP
+        WHERE "id" = ${frameId}
+          AND "status" IN ('DRAFT', 'REVIEW', 'REJECTED')
+          AND "characterCastRevision" = ${characterCastRevision}
+          AND EXISTS (
+            SELECT 1 FROM "FrameStoryState"
+            WHERE "FrameStoryState"."frameId" = "Frame"."id"
+              AND "FrameStoryState"."revision" = ${target.revision}
+          )`
+    : target.status === "MISSING"
+      ? await prisma.$executeRaw`
+          UPDATE "Frame"
+          SET "status" = 'GENERATING', "updatedAt" = CURRENT_TIMESTAMP
+          WHERE "id" = ${frameId}
+            AND "status" IN ('DRAFT', 'REVIEW', 'REJECTED')
+            AND "characterCastRevision" = ${characterCastRevision}
+            AND NOT EXISTS (
+              SELECT 1 FROM "FrameStoryState"
+              WHERE "FrameStoryState"."frameId" = "Frame"."id"
+            )`
+      : await prisma.$executeRaw`
+          UPDATE "Frame"
+          SET "status" = 'GENERATING', "updatedAt" = CURRENT_TIMESTAMP
+          WHERE "id" = ${frameId}
+            AND "status" IN ('DRAFT', 'REVIEW', 'REJECTED')
+            AND "characterCastRevision" = ${characterCastRevision}
+            AND EXISTS (
+              SELECT 1 FROM "FrameStoryState"
+              WHERE "FrameStoryState"."frameId" = "Frame"."id"
+            )`;
+  if (claimed !== 1) {
+    throw new AppError("Frame status or target Story State changed before generation start.", 409, "GENERATION_START_CONFLICT");
+  }
+}
+
+function productionTargetMetadata(prepared: PreparedProductionGenerationContext) {
+  return {
+    revision: prepared.targetRevision,
+    provenance: prepared.targetProvenance,
+    fingerprint: prepared.targetFingerprint,
+    selectedPredecessorGenerationId: prepared.selectedPredecessorGenerationId ?? null
+  };
+}
+
+async function continuationValidationError(
+  context: Awaited<ReturnType<typeof loadFrameContext>>,
+  previousReferences: ReferenceAsset[],
+  projectContext: ProjectContext
+): Promise<string | undefined> {
   if (!context.frame.previousFrameId) return "Continue previous frame requires a previous Frame.";
-  const { prisma, projectPath } = projectDbManager.getActiveProject();
+  const { prisma, projectPath } = projectContext;
   const previous = await prisma.frame.findUnique({
     where: { id: context.frame.previousFrameId },
     include: { generations: true }
@@ -257,21 +415,6 @@ async function continuationValidationError(context: Awaited<ReturnType<typeof lo
   if (selected.status !== "SUCCESS") return "The selected previous Generation is not successful.";
   if (!selected.outputFilePath) return "The selected previous Generation has no output image.";
   if (previousReferences.length !== 1) return "Exactly one usable previous-frame reference is required.";
-  const absolutePath = path.isAbsolute(selected.outputFilePath) ? selected.outputFilePath : path.join(projectPath, selected.outputFilePath);
-  try {
-    const file = await fs.readFile(absolutePath);
-    const extension = path.extname(absolutePath).toLowerCase();
-    if (![".png", ".jpg", ".jpeg", ".webp"].includes(extension) || !hasMatchingImageSignature(extension, file)) {
-      return "The previous Generation image must be a readable PNG, JPEG, or WEBP file.";
-    }
-  } catch {
-    return "The previous Generation image file is missing or unreadable.";
-  }
-  return undefined;
-}
-
-function hasMatchingImageSignature(extension: string, file: Buffer): boolean {
-  if (extension === ".png") return file.subarray(0, 8).equals(Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]));
-  if (extension === ".jpg" || extension === ".jpeg") return file.subarray(0, 3).equals(Buffer.from([0xff, 0xd8, 0xff]));
-  return extension === ".webp" && file.subarray(0, 4).toString("ascii") === "RIFF" && file.subarray(8, 12).toString("ascii") === "WEBP";
+  const physical = await validateVisualBaseFile({ projectPath, filePath: selected.outputFilePath, generationId: selected.id });
+  return physical.status === "UNAVAILABLE" ? physical.message : undefined;
 }

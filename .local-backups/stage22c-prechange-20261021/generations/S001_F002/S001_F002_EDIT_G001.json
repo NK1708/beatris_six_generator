@@ -1,0 +1,133 @@
+{
+  "provider": "openai",
+  "model": "gpt-image-2.5-sunburst",
+  "frame": "S001_F002",
+  "references": [
+    "CHAR_BIRDMAN_MASTER_V1",
+    "CHAR_BIRDMAN_FULL_BODY_FRONT_V1",
+    "OUTFIT_BIRDMAN_ОБРАЗ_1_MASTER_V1",
+    "LOC_OFFICE_LOUNGE_MASTER_V1",
+    "ANGLE_OFFICE_LOUNGE_РАКУРС_1_VIEW_V1",
+    "STYLE_BEARRIDGE_MINIMAL_FLAT_REF_V1",
+    "STYLE_BEARRIDGE_MINIMAL_FLAT_REF_V2",
+    "STYLE_BEARRIDGE_MINIMAL_FLAT_REF_V3",
+    "STYLE_BEARRIDGE_MINIMAL_FLAT_REF_V4"
+  ],
+  "referenceRoles": [
+    {
+      "code": "CHAR_BIRDMAN_MASTER_V1",
+      "kind": "character",
+      "role": "Canonical identity reference for Birdman."
+    },
+    {
+      "code": "CHAR_BIRDMAN_FULL_BODY_FRONT_V1",
+      "kind": "character",
+      "role": "Additional canonical full body front reference for Birdman. Use to preserve body proportions, build, clothing silhouette, and full-body identity. This supplements the MASTER and must not redesign the character."
+    },
+    {
+      "code": "OUTFIT_BIRDMAN_ОБРАЗ_1_MASTER_V1",
+      "kind": "outfit",
+      "role": "Canonical outfit reference for Birdman / Black Overcoat."
+    },
+    {
+      "code": "LOC_OFFICE_LOUNGE_MASTER_V1",
+      "kind": "location",
+      "role": "Canonical location reference for Office Lounge."
+    },
+    {
+      "code": "ANGLE_OFFICE_LOUNGE_РАКУРС_1_VIEW_V1",
+      "kind": "location-angle",
+      "role": "Canonical location-angle reference for Office Lounge / Ракурс 1."
+    },
+    {
+      "code": "STYLE_BEARRIDGE_MINIMAL_FLAT_REF_V1",
+      "kind": "style",
+      "role": "Canonical visual style guidance. Use for style consistency only, not as source of scene content."
+    },
+    {
+      "code": "STYLE_BEARRIDGE_MINIMAL_FLAT_REF_V2",
+      "kind": "style",
+      "role": "Canonical visual style guidance. Use for style consistency only, not as source of scene content."
+    },
+    {
+      "code": "STYLE_BEARRIDGE_MINIMAL_FLAT_REF_V3",
+      "kind": "style",
+      "role": "Canonical visual style guidance. Use for style consistency only, not as source of scene content."
+    },
+    {
+      "code": "STYLE_BEARRIDGE_MINIMAL_FLAT_REF_V4",
+      "kind": "style",
+      "role": "Canonical visual style guidance. Use for style consistency only, not as source of scene content."
+    }
+  ],
+  "storyState": {
+    "sceneId": "cmtmyy8n20001uf583uas8kju",
+    "time": {
+      "description": "Late afternoon"
+    },
+    "environment": {
+      "door": "closed"
+    },
+    "characters": {
+      "cmtmwdlnl0002ufusmp4f4of6": {
+        "present": true,
+        "outfitId": "cmtmwpes40003uftkx1f077j3",
+        "emotion": "calm",
+        "pose": "natural upright standing posture",
+        "hairState": "neatly styled, unchanged from canonical reference",
+        "locationPosition": "standing beside the coffee maker"
+      }
+    },
+    "props": {},
+    "storyFacts": [
+      "Birdman is waiting for someone to arrive."
+    ]
+  },
+  "frameSnapshot": {
+    "id": "cmufi7xu90001ufs0m3khlpmb",
+    "sceneId": "cmtmyy8n20001uf583uas8kju",
+    "sequence": 2,
+    "frameCode": "S001_F002",
+    "type": "CG",
+    "status": "DRAFT",
+    "generationStrategy": "CONTINUE_PREVIOUS_FRAME",
+    "description": "Birdman has left the sofa and is standing beside the coffee maker.",
+    "action": "Birdman stands beside the desk with the coffee maker on the right side of the room. He is slightly turned toward the coffee maker as if preparing to make coffee. His arms rest naturally at his sides. He is not touching the coffee maker yet.",
+    "camera": "Medium-wide shot at standing eye level. Use the same established From Entrance location view as the previous frame. Keep the camera position and framing consistent with S001_F001.\n",
+    "composition": "The sofa remains empty on the left side of the frame. Birdman stands beside the desk and coffee maker on the right side of the room. Keep the coffee table visible in the foreground and preserve the established furniture layout and room proportions.",
+    "lighting": "Keep the same simplified late-afternoon interior lighting established in S001_F001. Use large flat areas of light and hard-edged shadow. No gradients, realistic reflections, bloom, or volumetric lighting.\n",
+    "expressionNotes": "Calm, serious expression. Natural upright standing posture. Preserve Birdman's tall, broad-shouldered build and canonical full-body proportions. No visible eyes. Preserve the canonical glasses, mustache, hairstyle, face shape, and body proportions.",
+    "continuityNotes": "Continue directly from S001_F001. Birdman has stood up from the sofa and walked to the coffee maker. The sofa is now empty. Preserve the established room layout, furniture positions, camera viewpoint, lighting, Birdman's identity, Black Overcoat, and visual style.",
+    "previousFrameId": "cmtmz8m7v0001ufiw3s6zt7qm",
+    "selectedGenerationId": null,
+    "characterIds": [
+      "cmtmwdlnl0002ufusmp4f4of6"
+    ],
+    "additionalCharacterReferenceIds": {
+      "cmtmwdlnl0002ufusmp4f4of6": [
+        "cmtmwoise0001uftk3u04k2yo"
+      ]
+    },
+    "locationId": "cmtmxe6xa0009uft0chtr5dpv",
+    "locationAngleId": "cmtmxfptr000duft0o6mdwqe0",
+    "styleProfileId": "cmtmxymmk0003ufds9loziorw",
+    "targetWidth": 1200,
+    "targetHeight": 675,
+    "targetAspectRatio": 1.777777777777778
+  },
+  "strategy": "CONTINUE_PREVIOUS_FRAME",
+  "baseFrameId": "cmtmz8m7v0001ufiw3s6zt7qm",
+  "baseGenerationId": "cmucm3zns0001ufx4mo2d2f82",
+  "baseImagePath": "generations/S001_F001/S001_F001_G005.png",
+  "deltaInstructions": "EDIT THE PROVIDED PREVIOUS FRAME.\nThe previous frame is the authoritative visual base.\nPreserve everything from the base image unless explicitly changed by the current Frame.\nPreserve camera position and framing unless changed below; room architecture; furniture geometry and placement; unchanged props; lighting unless changed below; visual style; and unchanged character identity, outfit, and state.\nCanonical references are supporting constraints. Preserve identity, canon, and style without redesigning unrelated content from the base image.\nDo not invent props, furniture, architecture, characters, or decorations unless explicitly requested.\nApply only the following current Frame and Story State changes:\nDescription: Birdman has left the sofa and is standing beside the coffee maker.\nAction: Birdman stands beside the desk with the coffee maker on the right side of the room. He is slightly turned toward the coffee maker as if preparing to make coffee. His arms rest naturally at his sides. He is not touching the coffee maker yet.\nCamera change: Medium-wide shot at standing eye level. Use the same established From Entrance location view as the previous frame. Keep the camera position and framing consistent with S001_F001.\n\nComposition change: The sofa remains empty on the left side of the frame. Birdman stands beside the desk and coffee maker on the right side of the room. Keep the coffee table visible in the foreground and preserve the established furniture layout and room proportions.\nLighting change: Keep the same simplified late-afternoon interior lighting established in S001_F001. Use large flat areas of light and hard-edged shadow. No gradients, realistic reflections, bloom, or volumetric lighting.\n\nExpression / pose change: Calm, serious expression. Natural upright standing posture. Preserve Birdman's tall, broad-shouldered build and canonical full-body proportions. No visible eyes. Preserve the canonical glasses, mustache, hairstyle, face shape, and body proportions.\nContinuity notes: Continue directly from S001_F001. Birdman has stood up from the sofa and walked to the coffee maker. The sofa is now empty. Preserve the established room layout, furniture positions, camera viewpoint, lighting, Birdman's identity, Black Overcoat, and visual style.\nCurrent Story State: {\"sceneId\":\"cmtmyy8n20001uf583uas8kju\",\"time\":{\"description\":\"Late afternoon\"},\"environment\":{\"door\":\"closed\"},\"characters\":{\"cmtmwdlnl0002ufusmp4f4of6\":{\"present\":true,\"outfitId\":\"cmtmwpes40003uftkx1f077j3\",\"emotion\":\"calm\",\"pose\":\"natural upright standing posture\",\"hairState\":\"neatly styled, unchanged from canonical reference\",\"locationPosition\":\"standing beside the coffee maker\"}},\"props\":{},\"storyFacts\":[\"Birdman is waiting for someone to arrive.\"]}",
+  "geometry": {
+    "targetWidth": 1200,
+    "targetHeight": 675,
+    "targetAspectRatio": 1.7777777777777777,
+    "generationAspectRatio": "16:9",
+    "generationResolution": "1536x864",
+    "requiresCrop": false,
+    "cropStrategy": "NONE"
+  },
+  "timestamp": "2026-09-24T13:05:25.376Z"
+}

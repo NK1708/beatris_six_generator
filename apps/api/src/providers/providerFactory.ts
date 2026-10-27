@@ -18,6 +18,7 @@ export interface ImageProviderFactoryOptions {
   model: string;
   outputFilePath: string;
   rootPath: string;
+  legacyRootPath?: string;
   geminiClient?: GeminiClient | undefined;
   openaiClient?: OpenAIClient | undefined;
 }
@@ -37,6 +38,7 @@ export function createImageProvider(options: ImageProviderFactoryOptions): Image
       model: options.model,
       outputFilePath: options.outputFilePath,
       rootPath: options.rootPath,
+      ...(options.legacyRootPath ? { legacyRootPath: options.legacyRootPath } : {}),
       ...(options.geminiClient ? { client: options.geminiClient } : {})
     });
   }
@@ -50,6 +52,7 @@ export function createImageProvider(options: ImageProviderFactoryOptions): Image
     model: options.model,
     outputFilePath: options.outputFilePath,
     rootPath: options.rootPath,
+    ...(options.legacyRootPath ? { legacyRootPath: options.legacyRootPath } : {}),
     ...(options.openaiClient ? { client: options.openaiClient } : {})
   });
 }

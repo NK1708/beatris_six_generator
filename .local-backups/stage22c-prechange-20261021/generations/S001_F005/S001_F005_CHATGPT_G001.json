@@ -1,0 +1,68 @@
+{
+  "source": "ChatGPT manual import",
+  "manualImport": true,
+  "exportId": "a25d1bb7-1e2a-48e1-81d1-5a4e8d1d966b",
+  "exportSchemaVersion": 1,
+  "importTimestamp": "2026-10-01T12:19:03.129Z",
+  "originalFileName": "5.png",
+  "inputMimeType": "image/png",
+  "strategy": "CONTINUE_PREVIOUS_FRAME",
+  "renderProtocol": {
+    "version": 1,
+    "promptPolicy": "verbatim",
+    "basePolicy": "authoritative",
+    "referencePolicy": "identity-only",
+    "allowPromptRewrite": false,
+    "allowSceneReinterpretation": false
+  },
+  "baseFrameId": "cmuibjou50001ufd44e45ywbz",
+  "baseGenerationId": "cmuibrx2a000dufd4skffywq6",
+  "productionReferenceIds": [
+    "cmtmzcdg40005ufiwarkas4ak",
+    "cmuic3rfw000rufd4qhc9swvk",
+    "cmtmzd9840007ufiwxmac4rvj",
+    "cmuic61lb000vufd4lncpg4d9",
+    "cmtmxffxf000buft000o1gepz",
+    "cmtmxv7rp0001ufdsay0l989c",
+    "cmtmyfm3l0001ufvgm34brest",
+    "cmtmyfofz0003ufvg1d9kabu4",
+    "cmtmyfq040005ufvg6u6pxaci",
+    "cmtmyfrnm0007ufvgod7viuc2"
+  ],
+  "visualReferenceIds": [
+    "cmtmzcdg40005ufiwarkas4ak",
+    "cmuic3rfw000rufd4qhc9swvk"
+  ],
+  "supportingReferenceIds": [
+    "cmtmzcdg40005ufiwarkas4ak",
+    "cmuic3rfw000rufd4qhc9swvk",
+    "cmtmzd9840007ufiwxmac4rvj",
+    "cmuic61lb000vufd4lncpg4d9",
+    "cmtmxffxf000buft000o1gepz",
+    "cmtmxv7rp0001ufdsay0l989c",
+    "cmtmyfm3l0001ufvgm34brest",
+    "cmtmyfofz0003ufvg1d9kabu4",
+    "cmtmyfq040005ufvg6u6pxaci",
+    "cmtmyfrnm0007ufvgod7viuc2"
+  ],
+  "continuityEditContract": {
+    "changes": [
+      "Webster appears standing in the open doorway."
+    ],
+    "forbidden": [
+      "Do not move Birdman.",
+      "Do not change Birdman's pose or head direction.",
+      "Do not change the position or opening angle of the door.",
+      "Do not place anything in either character's hands.",
+      "Do not add any character other than Webster.",
+      "Do not change the camera or framing.",
+      "Do not move or redesign any existing furniture.",
+      "Do not change the room geometry.",
+      "Do not change the lighting, brightness, palette, or visual style.",
+      "Do not add internal facial features to either character.",
+      "Do not add any new props."
+    ],
+    "allowedChanges": []
+  },
+  "provenanceNote": "Production references preserve Bearridge context provenance; visual reference IDs identify files actually included in the ChatGPT package. Neither is ChatGPT renderer telemetry."
+}

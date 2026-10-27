@@ -571,6 +571,12 @@ The preview shows strategy, base image, supporting references and delta instruct
 
 The imported file is copied to `generations/<frame-code>/` and represented as a normal successful `Generation` with `provider = chatgpt-manual`. It enters the existing Review and Lock workflow. A continuation import retains its base Frame, selected base Generation, `parentGenerationId`, supporting export references, and Continuity Edit Contract provenance, but does not claim that ChatGPT used every supplied reference. Once locked, the imported Generation automatically becomes the previous-frame base for a following continuation Frame.
 
+## Repair Generation
+
+On the **Generations** page, choose **Repair Generation** on a successful result. Enter one correction per line under **Change Only**, and optional restrictions under **Forbidden**. **Export Repair for ChatGPT** downloads a portable ZIP with the chosen result as `AUTHORITATIVE_BASE`, a self-contained prompt and provenance. Upload the base image in a new ChatGPT chat, paste `01_CHATGPT_PROMPT.txt`, then import the corrected image using the matching repair export.
+
+The import creates another Generation of the same Frame with `generationType = REPAIR` and `parentGenerationId` pointing to the source. Its contract is recorded in `rawMetadata`. The source remains available; the repaired result is not selected or locked automatically. Compare results on **Generations**, select the preferred one, then lock it through the existing review action. A previously locked Frame keeps its current selected result until you explicitly choose another.
+
 To backup a project, copy its project folder.
 
 Отдельно копировать `dev.sqlite` больше не нужно. Для переноса production-проекта достаточно папки, содержащей `project.sqlite`, `project.json` и assets.

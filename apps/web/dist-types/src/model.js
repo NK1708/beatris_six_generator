@@ -1,0 +1,1 @@
+export const continuityCategories = ["character.position", "character.pose", "character.expression", "character.outfit", "character.props", "camera", "composition", "lighting", "environment", "architecture", "furniture"];

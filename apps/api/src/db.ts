@@ -7,6 +7,7 @@ import { initAppRegistrySchema, initSqliteSchema } from "./services/sqliteSchema
 import { config } from "./config.js";
 import { AppError, NotFoundError } from "./errors.js";
 import { FileService } from "./services/fileService.js";
+import { logger } from "./logger.js";
 
 export interface ProjectRegistryEntry {
   id: string;
@@ -23,12 +24,25 @@ export interface ProjectContext {
   project: Project;
 }
 
+export interface ProjectContextLease extends ProjectContext {
+  release(): Promise<void>;
+}
+
+interface ManagedProjectContext {
+  context: ProjectContext;
+  active: boolean;
+  leaseCount: number;
+  closed: boolean;
+  disconnectPromise?: Promise<void>;
+}
+
 const fileService = new FileService();
 
 export class ProjectDatabaseManager {
   private readonly appDatabasePath = path.join(config.projectsRoot, "app.sqlite");
   private readonly appPrisma = new PrismaClient({ datasources: { db: { url: sqliteUrl(this.appDatabasePath) } } });
-  private active: ProjectContext | null = null;
+  private active: ManagedProjectContext | null = null;
+  private readonly contexts = new Set<ManagedProjectContext>();
 
   async init(): Promise<void> {
     await fs.mkdir(config.projectsRoot, { recursive: true });
@@ -140,7 +154,7 @@ export class ProjectDatabaseManager {
       await assertDeletableProjectFolder(entry.projectPath);
     }
 
-    if (this.active?.project.id === input.projectId) {
+    if (this.active?.context.project.id === input.projectId) {
       await this.closeProject();
     }
 
@@ -156,25 +170,77 @@ export class ProjectDatabaseManager {
   }
 
   async closeProject(): Promise<void> {
-    if (this.active) {
-      await this.active.prisma.$disconnect();
-      this.active = null;
-    }
+    const active = this.active;
+    if (!active) return;
+    this.active = null;
+    active.active = false;
+    await this.disconnectIfUnused(active);
   }
 
   getActiveProject(): ProjectContext {
-    if (!this.active) {
+    if (!this.active || this.active.closed) {
       throw new AppError("No active project is open.", 409, "NO_ACTIVE_PROJECT");
     }
-    return this.active;
+    return this.active.context;
+  }
+
+  acquireActiveProject(): ProjectContextLease {
+    const managed = this.active;
+    if (!managed || managed.closed) {
+      throw new AppError("No active project is open.", 409, "NO_ACTIVE_PROJECT");
+    }
+    managed.leaseCount += 1;
+    let released = false;
+    return {
+      ...managed.context,
+      release: async () => {
+        if (released) return;
+        released = true;
+        if (managed.leaseCount <= 0) {
+          logger.error({ projectPath: managed.context.projectPath }, "project context lease counter underflow prevented");
+          return;
+        }
+        managed.leaseCount -= 1;
+        await this.disconnectIfUnused(managed);
+      }
+    };
+  }
+
+  getContextLifecycleSnapshot(): Array<{ projectPath: string; active: boolean; leaseCount: number; closed: boolean }> {
+    return [...this.contexts].map((managed) => ({
+      projectPath: managed.context.projectPath,
+      active: managed.active,
+      leaseCount: managed.leaseCount,
+      closed: managed.closed
+    }));
   }
 
   private async setActive(context: ProjectContext): Promise<void> {
-    await this.closeProject();
-    this.active = context;
+    const previous = this.active;
+    if (previous) previous.active = false;
+    const managed: ManagedProjectContext = { context, active: true, leaseCount: 0, closed: false };
+    this.contexts.add(managed);
+    this.active = managed;
+    if (previous) await this.disconnectIfUnused(previous);
     await this.appPrisma.$executeRaw`
       UPDATE ProjectRegistryEntry SET lastOpenedAt = CURRENT_TIMESTAMP WHERE id = ${context.project.id}
     `;
+  }
+
+  private async disconnectIfUnused(managed: ManagedProjectContext): Promise<void> {
+    if (managed.active || managed.leaseCount > 0 || managed.closed) {
+      if (managed.disconnectPromise) await managed.disconnectPromise;
+      return;
+    }
+    managed.closed = true;
+    managed.disconnectPromise = managed.context.prisma.$disconnect()
+      .catch((error: unknown) => {
+        logger.error({ error, projectPath: managed.context.projectPath }, "failed to disconnect project database");
+      })
+      .finally(() => {
+        this.contexts.delete(managed);
+      });
+    await managed.disconnectPromise;
   }
 
   private async registerProject(id: string, name: string, projectPath: string): Promise<void> {

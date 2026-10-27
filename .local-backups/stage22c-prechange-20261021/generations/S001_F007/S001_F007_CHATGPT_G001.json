@@ -1,0 +1,82 @@
+{
+  "source": "ChatGPT manual import",
+  "manualImport": true,
+  "exportId": "28fd6b57-24b1-4d15-8ccb-6defcd48d55f",
+  "exportSchemaVersion": 1,
+  "importTimestamp": "2026-10-21T08:12:35.085Z",
+  "originalFileName": "da8dc5a0-f388-4cae-bae9-8262e982ed11.png",
+  "inputMimeType": "image/png",
+  "strategy": "CONTINUE_PREVIOUS_FRAME",
+  "operation": null,
+  "repairContract": null,
+  "repairSourceGenerationId": null,
+  "renderProtocol": {
+    "version": 1,
+    "promptPolicy": "verbatim",
+    "basePolicy": "authoritative",
+    "referencePolicy": "identity-only",
+    "allowPromptRewrite": false,
+    "allowSceneReinterpretation": false
+  },
+  "baseFrameId": "cmupi43zt000euf9ws0r6t2r6",
+  "baseGenerationId": "cmupibubg000ouf9w2zzat978",
+  "productionReferenceIds": [
+    "cmtmzcdg40005ufiwarkas4ak",
+    "cmuic3rfw000rufd4qhc9swvk",
+    "cmtmzd9840007ufiwxmac4rvj",
+    "cmuic61lb000vufd4lncpg4d9",
+    "cmtmxffxf000buft000o1gepz",
+    "cmtmxv7rp0001ufdsay0l989c",
+    "cmtmyfm3l0001ufvgm34brest",
+    "cmtmyfofz0003ufvg1d9kabu4",
+    "cmtmyfq040005ufvg6u6pxaci",
+    "cmtmyfrnm0007ufvgod7viuc2"
+  ],
+  "visualReferenceIds": [
+    "cmtmzcdg40005ufiwarkas4ak",
+    "cmuic3rfw000rufd4qhc9swvk"
+  ],
+  "supportingReferenceIds": [
+    "cmtmzcdg40005ufiwarkas4ak",
+    "cmuic3rfw000rufd4qhc9swvk",
+    "cmtmzd9840007ufiwxmac4rvj",
+    "cmuic61lb000vufd4lncpg4d9",
+    "cmtmxffxf000buft000o1gepz",
+    "cmtmxv7rp0001ufdsay0l989c",
+    "cmtmyfm3l0001ufvgm34brest",
+    "cmtmyfofz0003ufvg1d9kabu4",
+    "cmtmyfq040005ufvg6u6pxaci",
+    "cmtmyfrnm0007ufvgod7viuc2"
+  ],
+  "continuityEditContract": {
+    "changes": [
+      "Webster moves from standing near the sofa to sitting naturally upright on the left side of the sofa.",
+      "Birdman moves from beside the coffee maker to standing beside the coffee table, facing generally toward Webster.",
+      "Add one closed dark document folder lying on top of the coffee table.",
+      "Change the office door from open to closed."
+    ],
+    "forbidden": [
+      "Do not change Webster's canonical appearance, hairstyle, body proportions, or Beige Suit.",
+      "Do not change Birdman's canonical appearance, hairstyle, body proportions, Black Overcoat, glasses, or moustache.",
+      "Do not place anything in either character's hands.",
+      "Do not add, remove, or replace characters.",
+      "Do not change the camera position, angle, framing, perspective, or shot size.",
+      "Do not move, resize, remove, replace, or redesign the sofa.",
+      "Do not move, resize, remove, replace, or redesign the coffee table.",
+      "Do not move, resize, remove, replace, or redesign the desk or coffee maker.",
+      "Do not change the room geometry, walls, ceiling, floor, baseboards, or light fixture.",
+      "Do not add any object other than the single closed dark document folder.",
+      "Do not add text, labels, logos, or markings to the document folder.",
+      "Do not change the lighting, shadows, brightness, color palette, or visual style.",
+      "Do not add internal facial features to either character.",
+      "Do not redesign the closed door; preserve the same canonical door and doorway."
+    ],
+    "allowedChanges": [
+      "environment",
+      "character.pose",
+      "character.position",
+      "character.props"
+    ]
+  },
+  "provenanceNote": "Production references preserve Bearridge context provenance; visual reference IDs identify files actually included in the ChatGPT package. Neither is ChatGPT renderer telemetry."
+}

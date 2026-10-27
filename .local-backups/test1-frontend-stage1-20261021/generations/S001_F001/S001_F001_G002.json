@@ -1,0 +1,116 @@
+{
+  "provider": "mock",
+  "model": "gemini-3.1-flash-image",
+  "frame": "S001_F001",
+  "references": [
+    "CHAR_BIRDMAN_MASTER_V1",
+    "OUTFIT_BIRDMAN_ОБРАЗ_1_MASTER_V1",
+    "LOC_OFFICE_LOUNGE_MASTER_V1",
+    "ANGLE_OFFICE_LOUNGE_РАКУРС_1_VIEW_V1",
+    "STYLE_BEARRIDGE_MINIMAL_FLAT_REF_V1",
+    "STYLE_BEARRIDGE_MINIMAL_FLAT_REF_V2",
+    "STYLE_BEARRIDGE_MINIMAL_FLAT_REF_V3",
+    "STYLE_BEARRIDGE_MINIMAL_FLAT_REF_V4"
+  ],
+  "referenceRoles": [
+    {
+      "code": "CHAR_BIRDMAN_MASTER_V1",
+      "kind": "character",
+      "role": "Canonical identity reference for Birdman."
+    },
+    {
+      "code": "OUTFIT_BIRDMAN_ОБРАЗ_1_MASTER_V1",
+      "kind": "outfit",
+      "role": "Canonical outfit reference for Birdman / Black Overcoat."
+    },
+    {
+      "code": "LOC_OFFICE_LOUNGE_MASTER_V1",
+      "kind": "location",
+      "role": "Canonical location reference for Office Lounge."
+    },
+    {
+      "code": "ANGLE_OFFICE_LOUNGE_РАКУРС_1_VIEW_V1",
+      "kind": "location-angle",
+      "role": "Canonical location-angle reference for Office Lounge / Ракурс 1."
+    },
+    {
+      "code": "STYLE_BEARRIDGE_MINIMAL_FLAT_REF_V1",
+      "kind": "style",
+      "role": "Canonical visual style guidance. Use for style consistency only, not as source of scene content."
+    },
+    {
+      "code": "STYLE_BEARRIDGE_MINIMAL_FLAT_REF_V2",
+      "kind": "style",
+      "role": "Canonical visual style guidance. Use for style consistency only, not as source of scene content."
+    },
+    {
+      "code": "STYLE_BEARRIDGE_MINIMAL_FLAT_REF_V3",
+      "kind": "style",
+      "role": "Canonical visual style guidance. Use for style consistency only, not as source of scene content."
+    },
+    {
+      "code": "STYLE_BEARRIDGE_MINIMAL_FLAT_REF_V4",
+      "kind": "style",
+      "role": "Canonical visual style guidance. Use for style consistency only, not as source of scene content."
+    }
+  ],
+  "storyState": {
+    "sceneId": "cmtmyy8n20001uf583uas8kju",
+    "time": {
+      "description": "Late afternoon"
+    },
+    "environment": {
+      "door": "closed"
+    },
+    "characters": {
+      "cmtmwdlnl0002ufusmp4f4of6": {
+        "present": true,
+        "outfitId": "cmtmwpes40003uftkx1f077j3",
+        "emotion": "calm",
+        "pose": "relaxed seated posture",
+        "hairState": "neatly styled, unchanged from canonical reference",
+        "locationPosition": "seated on the sofa"
+      }
+    },
+    "props": {},
+    "storyFacts": [
+      "Birdman is waiting for someone to arrive."
+    ]
+  },
+  "frameSnapshot": {
+    "id": "cmtmz8m7v0001ufiw3s6zt7qm",
+    "sceneId": "cmtmyy8n20001uf583uas8kju",
+    "sequence": 1,
+    "frameCode": "S001_F001",
+    "type": "CG",
+    "status": "REVIEW",
+    "description": "Birdman waiting alone in the Office Lounge.",
+    "action": "Birdman sits alone on the brown sofa, waiting calmly. His head is turned slightly toward the right side of the room. One hand rests on the sofa armrest and the other rests naturally near his lap.",
+    "camera": "Medium-wide shot at seated eye level. Camera uses the established From Entrance location view. Birdman is positioned on the left third of the frame.",
+    "composition": "Show Birdman seated on the sofa with part of the coffee table visible in the foreground. Preserve open negative space on the right side of the frame and keep the established furniture layout unchanged.",
+    "lighting": "Soft simplified late-afternoon interior lighting. Use large flat areas of light and hard-edged shadow consistent with the canonical style. No gradients, realistic reflections, bloom, or volumetric lighting.",
+    "expressionNotes": "Calm, serious expression. Relaxed seated posture. No visible eyes; preserve the canonical glasses, mustache, hairstyle, face shape, and body proportions.",
+    "continuityNotes": "First frame of the scene. Establish the canonical room layout, Birdman’s current outfit, seated position, and late-afternoon lighting for subsequent continuity.",
+    "previousFrameId": null,
+    "selectedGenerationId": null,
+    "characterIds": [
+      "cmtmwdlnl0002ufusmp4f4of6"
+    ],
+    "locationId": "cmtmxe6xa0009uft0chtr5dpv",
+    "locationAngleId": "cmtmxfptr000duft0o6mdwqe0",
+    "styleProfileId": "cmtmxymmk0003ufds9loziorw",
+    "targetWidth": 1200,
+    "targetHeight": 675,
+    "targetAspectRatio": 1.777777777777778
+  },
+  "geometry": {
+    "targetWidth": 1200,
+    "targetHeight": 675,
+    "targetAspectRatio": 1.7777777777777777,
+    "generationAspectRatio": "16:9",
+    "generationResolution": "1376x768",
+    "requiresCrop": false,
+    "cropStrategy": "NONE"
+  },
+  "timestamp": "2026-09-05T16:07:16.271Z"
+}

@@ -1,6 +1,6 @@
 import express, { type NextFunction, type Request, type Response } from "express";
 import cors from "cors";
-import { consistencyBenchmarkSceneName, createEmptyStoryState, frameCode, initialConsistencyBenchmarkFrames, referenceVersionCode, slugify } from "@bearridge/core";
+import { consistencyBenchmarkSceneName, createEmptyStoryState, initialConsistencyBenchmarkFrames, referenceVersionCode, slugify } from "@bearridge/core";
 import {
   createCharacterSchema,
   continuityEditContractSchema,
@@ -14,6 +14,8 @@ import {
   deleteProjectSchema,
   generateFrameSchema,
   importChatGPTResultSchema,
+  exportGenerationRepairSchema,
+  frameTargetRecoveryRequestSchema,
   lockFrameSchema,
   openProjectSchema,
   saveStoryStateSchema,
@@ -22,6 +24,7 @@ import {
   updateCharacterSchema,
   updateFrameSchema,
   updateFrameContextSchema,
+  updateFrameTargetStoryStateSchema,
   updateLocationAngleSchema,
   updateOutfitSchema,
   updateProjectSettingsSchema,
@@ -34,18 +37,42 @@ import { config } from "./config.js";
 import { projectDbManager } from "./db.js";
 import { AppError } from "./errors.js";
 import { loadProject, projectInclude } from "./services/contextService.js";
-import { generateFrame, previewFrame } from "./services/generationService.js";
-import { createChatGPTExport } from "./services/chatGPTExportService.js";
+import { generateFrame, previewProductionFrame } from "./services/generationService.js";
+import { createChatGPTExport, ManualChatGPTExportReadinessError } from "./services/chatGPTExportService.js";
+import { createChatGPTRepairExport } from "./services/chatGPTRepairService.js";
 import { importChatGPTResult, listChatGPTExports } from "./services/chatGPTImportService.js";
 import { createLocationAngle, lockReferenceAsCanonical, setReferenceStatus, uploadReferenceVersion } from "./services/referenceService.js";
 import { updateFrameContext } from "./services/frameContextService.js";
-import { lockFrameWithSelectedGeneration, selectGenerationForFrame } from "./services/generationReviewService.js";
+import { GenerationReviewError, lockFrameWithSelectedGeneration, selectGenerationForFrame } from "./services/generationReviewService.js";
+import { getFrameLockReadiness } from "./services/frameLockReadinessService.js";
+import { ProductionGenerationReadinessError } from "./services/productionGenerationGate.js";
+import { createFrameWithTargetStoryState } from "./services/frameCreationService.js";
+import {
+  FrameStoryStateService,
+  FrameStoryStateServiceError,
+  type InitializedFrameTargetStoryState,
+  type PersistedFrameTargetStoryState
+} from "./services/frameStoryStateService.js";
+import {
+  FrameStoryStateRecoveryError,
+  getFrameTargetRecoveryCandidates,
+  recoverFrameTargetStoryState
+} from "./services/frameStoryStateRecoveryService.js";
+import { resolveProjectFileForRead } from "./services/projectPathResolver.js";
 
 export function createApp() {
   const app = express();
   app.use(cors());
   app.use(express.json({ limit: "30mb" }));
-  app.use("/project-files", express.static(config.projectsRoot));
+  app.get("/api/projects/:projectId/files/*", asyncHandler(async (request, response) => {
+    const active = projectDbManager.getActiveProject();
+    if (active.project.id !== requiredParam(request, "projectId")) {
+      throw new AppError("The requested file does not belong to the active project.", 409, "PROJECT_CONTEXT_MISMATCH");
+    }
+    const relativePath = request.params[0];
+    if (!relativePath) throw new AppError("Missing project file path.", 400, "PROJECT_PATH_INVALID");
+    response.sendFile(await resolveProjectFileForRead(active.projectPath, relativePath, { legacyRootPath: active.project.rootPath }));
+  }));
 
   app.get("/api/health", (_request, response) => {
     response.json({
@@ -63,13 +90,13 @@ export function createApp() {
   app.post("/api/projects", asyncHandler(async (request, response) => {
     const input = createProjectSchema.parse(request.body);
     const context = await projectDbManager.createProject(input);
-    response.status(201).json(context.project);
+    response.status(201).json({ ...context.project, rootPath: context.projectPath });
   }));
 
   app.post("/api/projects/open", asyncHandler(async (request, response) => {
     const input = openProjectSchema.parse(request.body);
     const context = await projectDbManager.openProject(input);
-    response.json(context.project);
+    response.json({ ...context.project, rootPath: context.projectPath });
   }));
 
   app.delete("/api/projects/:projectId", asyncHandler(async (request, response) => {
@@ -324,41 +351,62 @@ export function createApp() {
     response.json(state);
   }));
 
+  app.get("/api/frames/:frameId/target-story-state", asyncHandler(async (request, response) => {
+    const frameId = requiredParam(request, "frameId");
+    const { prisma } = projectDbManager.getActiveProject();
+    try {
+      const result = await new FrameStoryStateService(prisma).getFrameTargetStoryState(frameId);
+      response.json(result.status === "AVAILABLE" ? serializeFrameTargetStoryState(result) : result);
+    } catch (error) {
+      if (error instanceof FrameStoryStateServiceError && error.code === "TARGET_INVALID") {
+        response.json({ status: "INVALID", frameId, code: error.code, message: error.message, diagnostics: error.diagnostics });
+        return;
+      }
+      throw error;
+    }
+  }));
+
+  app.post("/api/frames/:frameId/target-story-state/initialize", asyncHandler(async (request, response) => {
+    const { prisma } = projectDbManager.getActiveProject();
+    const result = await new FrameStoryStateService(prisma).initializeFrameTargetStoryState(requiredParam(request, "frameId"));
+    response.json(serializeFrameTargetStoryState(result));
+  }));
+
+  app.get("/api/frames/:frameId/target-story-state/recovery-candidates", asyncHandler(async (request, response) => {
+    const { prisma, projectPath } = projectDbManager.getActiveProject();
+    response.json(await getFrameTargetRecoveryCandidates(prisma, projectPath, requiredParam(request, "frameId")));
+  }));
+
+  app.post("/api/frames/:frameId/target-story-state/recover", asyncHandler(async (request, response) => {
+    const parsed = frameTargetRecoveryRequestSchema.safeParse(request.body);
+    if (!parsed.success) throw new FrameStoryStateRecoveryError("RECOVERY_SOURCE_REQUIRED", "A source Generation is required.", 400);
+    const { prisma } = projectDbManager.getActiveProject();
+    const result = await recoverFrameTargetStoryState(prisma, requiredParam(request, "frameId"), parsed.data.sourceGenerationId);
+    response.status(201).json(serializeFrameTargetStoryState(result));
+  }));
+
+  app.put("/api/frames/:frameId/target-story-state", asyncHandler(async (request, response) => {
+    const parsed = updateFrameTargetStoryStateSchema.safeParse(request.body);
+    if (!parsed.success) {
+      throw new AppError("Invalid Frame target Story State update request.", 400, "VALIDATION_ERROR");
+    }
+    const input = parsed.data;
+    const { prisma } = projectDbManager.getActiveProject();
+    const result = await new FrameStoryStateService(prisma).updateFrameTargetStoryState(
+      requiredParam(request, "frameId"), input.document, input.expectedRevision
+    );
+    response.json(serializeFrameTargetStoryState(result));
+  }));
+
   app.post("/api/frames", asyncHandler(async (request, response) => {
     const input = createFrameSchema.parse(request.body);
     const { prisma } = projectDbManager.getActiveProject();
-    const scene = await prisma.scene.findUnique({ where: { id: input.sceneId } });
-    if (!scene) {
-      throw new AppError("Scene not found.", 404, "NOT_FOUND");
-    }
-    const frame = await prisma.frame.create({
-      data: {
-        sceneId: input.sceneId,
-        sequence: input.sequence,
-        type: input.type,
-        generationStrategy: input.generationStrategy,
-        continuityEditContract: JSON.stringify(input.continuityEditContract),
-        description: input.description,
-        action: input.action,
-        camera: input.camera,
-        composition: input.composition,
-        lighting: input.lighting,
-        expressionNotes: input.expressionNotes,
-        continuityNotes: input.continuityNotes,
-        previousFrameId: input.previousFrameId ?? null,
-        locationId: input.locationId ?? scene.locationId ?? null,
-        locationAngleId: input.locationAngleId ?? null,
-        styleProfileId: input.styleProfileId ?? null,
-        targetWidth: input.targetWidth ?? null,
-        targetHeight: input.targetHeight ?? null,
-        targetAspectRatio: input.targetAspectRatio ?? null,
-        frameCode: frameCode(scene.sequence, input.sequence),
-        characters: {
-          create: input.characterIds.map((characterId, index) => ({ characterId, order: index + 1 }))
-        }
-      }
+    const created = await createFrameWithTargetStoryState(prisma, input);
+    response.status(201).json({
+      frame: serializeCreatedFrame(created.frame),
+      target: serializeFrameTargetStoryState(created.target),
+      diagnostics: created.diagnostics
     });
-    response.status(201).json(frame);
   }));
 
   app.put("/api/frames/:frameId", asyncHandler(async (request, response) => {
@@ -383,10 +431,12 @@ export function createApp() {
         targetAspectRatio
       }
     });
-    if (input.characterIds) {
+    if (input.characterIds !== undefined || input.characterCastMode !== undefined || input.locationId !== undefined || input.locationAngleId !== undefined || input.styleProfileId !== undefined) {
       frame = await updateFrameContext(prisma, {
         frameId: input.frameId,
         characterIds: input.characterIds,
+        characterCastMode: input.characterCastMode,
+        expectedCharacterCastRevision: input.expectedCharacterCastRevision,
         additionalCharacterReferenceIds: input.additionalCharacterReferenceIds ?? {},
         locationId: input.locationId,
         locationAngleId: input.locationAngleId,
@@ -404,7 +454,7 @@ export function createApp() {
   }));
 
   app.get("/api/frames/:frameId/preview", asyncHandler(async (request, response) => {
-    response.json(await previewFrame(requiredParam(request, "frameId")));
+    response.json(await previewProductionFrame(requiredParam(request, "frameId")));
   }));
 
   app.post("/api/generations", asyncHandler(async (request, response) => {
@@ -414,6 +464,15 @@ export function createApp() {
 
   app.post("/api/frames/:frameId/export/chatgpt", asyncHandler(async (request, response) => {
     const exported = await createChatGPTExport(requiredParam(request, "frameId"));
+    response.setHeader("Content-Type", "application/zip");
+    response.setHeader("Content-Disposition", `attachment; filename="${exported.fileName}"`);
+    response.setHeader("X-Bearridge-Export-Id", exported.exportId);
+    response.send(exported.buffer);
+  }));
+
+  app.post("/api/frames/:frameId/export/chatgpt/repair", asyncHandler(async (request, response) => {
+    const input = exportGenerationRepairSchema.parse({ ...request.body, frameId: requiredParam(request, "frameId") });
+    const exported = await createChatGPTRepairExport(input.frameId, input);
     response.setHeader("Content-Type", "application/zip");
     response.setHeader("Content-Disposition", `attachment; filename="${exported.fileName}"`);
     response.setHeader("X-Bearridge-Export-Id", exported.exportId);
@@ -435,10 +494,17 @@ export function createApp() {
     response.json(await selectGenerationForFrame(prisma, input.frameId, input.generationId));
   }));
 
+  app.get("/api/frames/:frameId/lock-readiness", asyncHandler(async (request, response) => {
+    const { prisma, projectPath } = projectDbManager.getActiveProject();
+    const readiness = await getFrameLockReadiness(prisma, projectPath, requiredParam(request, "frameId"));
+    if (readiness.status === "BLOCKED" && readiness.reasons.includes("FRAME_NOT_FOUND")) throw new AppError("Frame not found.", 404, "NOT_FOUND");
+    response.json(readiness);
+  }));
+
   app.post("/api/frames/:frameId/lock", asyncHandler(async (request, response) => {
     const input = lockFrameSchema.parse({ frameId: requiredParam(request, "frameId") });
-    const { prisma } = projectDbManager.getActiveProject();
-    response.json(await lockFrameWithSelectedGeneration(prisma, input.frameId));
+    const { prisma, projectPath } = projectDbManager.getActiveProject();
+    response.json(await lockFrameWithSelectedGeneration(prisma, projectPath, input.frameId));
   }));
 
   app.post("/api/projects/:projectId/benchmark/seed", asyncHandler(async (request, response) => {
@@ -511,7 +577,6 @@ export function createApp() {
     }
 
     const frameBySequence = new Map(scene.frames.map((frame) => [frame.sequence, frame]));
-    let previousFrameId = scene.frames.sort((left, right) => left.sequence - right.sequence).at(-1)?.id ?? null;
     let createdCount = 0;
 
     for (const spec of initialConsistencyBenchmarkFrames()) {
@@ -530,33 +595,25 @@ export function createApp() {
         });
         await prisma.frameCharacter.deleteMany({ where: { frameId: existingFrame.id } });
         await prisma.frameCharacter.create({ data: { frameId: existingFrame.id, characterId: input.characterId, order: 1 } });
-        previousFrameId = existingFrame.id;
         continue;
       }
-      const created = await prisma.frame.create({
-        data: {
-          sceneId: scene.id,
-          sequence: spec.sequence,
-          frameCode: frameCode(scene.sequence, spec.sequence),
-          type: "CG",
-          action: spec.action,
-          camera: spec.camera,
-          composition: spec.composition,
-          expressionNotes: spec.expressionNotes,
-          continuityNotes: `${spec.continuityNotes}\nBenchmark tags: ${spec.tags.join(", ")}.`,
-          previousFrameId,
-          locationId: input.locationId,
-          locationAngleId: input.locationAngleId ?? null,
-          styleProfileId: input.styleProfileId,
-          targetWidth: spec.targetWidth,
-          targetHeight: spec.targetHeight,
-          targetAspectRatio: spec.targetWidth / spec.targetHeight,
-          characters: {
-            create: [{ characterId: input.characterId, order: 1 }]
-          }
-        }
-      });
-      previousFrameId = created.id;
+      await createFrameWithTargetStoryState(prisma, createFrameSchema.parse({
+        sceneId: scene.id,
+        sequence: spec.sequence,
+        type: "CG",
+        action: spec.action,
+        camera: spec.camera,
+        composition: spec.composition,
+        expressionNotes: spec.expressionNotes,
+        continuityNotes: `${spec.continuityNotes}\nBenchmark tags: ${spec.tags.join(", ")}.`,
+        characterIds: [input.characterId],
+        locationId: input.locationId,
+        locationAngleId: input.locationAngleId,
+        styleProfileId: input.styleProfileId,
+        targetWidth: spec.targetWidth,
+        targetHeight: spec.targetHeight,
+        targetAspectRatio: spec.targetWidth / spec.targetHeight
+      }));
       createdCount += 1;
     }
 
@@ -584,16 +641,49 @@ export function createApp() {
     if (!project) {
       throw new AppError("Project not found.", 404, "NOT_FOUND");
     }
-    response.json(serializeProject(project));
+    response.json({ ...serializeProject(project), rootPath: projectDbManager.getActiveProject().projectPath });
   }));
 
   app.use((error: unknown, _request: Request, response: Response, _next: NextFunction) => {
+    if (error instanceof FrameStoryStateRecoveryError) {
+      response.status(error.statusCode).json({ error: error.message, code: error.code, diagnostics: error.diagnostics });
+      return;
+    }
+    if (error instanceof GenerationReviewError) {
+      response.status(error.statusCode).json({ error: error.message, code: error.code, reasons: error.reasons, diagnostics: error.diagnostics });
+      return;
+    }
+    if (error instanceof FrameStoryStateServiceError) {
+      response.status(frameStoryStateHttpStatus(error)).json({
+        error: error.message,
+        code: error.code,
+        diagnostics: error.diagnostics
+      });
+      return;
+    }
+    if (error instanceof ManualChatGPTExportReadinessError) {
+      response.status(error.statusCode).json({
+        error: error.message,
+        code: error.code,
+        reasons: error.reasons,
+        diagnostics: error.diagnostics
+      });
+      return;
+    }
+    if (error instanceof ProductionGenerationReadinessError) {
+      response.status(error.statusCode).json({
+        error: error.message,
+        code: error.code,
+        reasons: error.reasons,
+        diagnostics: error.diagnostics
+      });
+      return;
+    }
     if (error instanceof AppError) {
       response.status(error.statusCode).json({ error: error.message, code: error.code });
       return;
     }
-    const message = error instanceof Error ? error.message : "Unknown error";
-    response.status(500).json({ error: message, code: "INTERNAL_ERROR" });
+    response.status(500).json({ error: "Internal server error.", code: "INTERNAL_ERROR" });
   });
 
   return app;
@@ -613,11 +703,54 @@ function requiredParam(request: Request, name: string): string {
   return value;
 }
 
+function serializeFrameTargetStoryState(target: PersistedFrameTargetStoryState | InitializedFrameTargetStoryState) {
+  return {
+    status: target.status,
+    id: target.id,
+    frameId: target.frameId,
+    document: target.document,
+    revision: target.revision,
+    originType: target.provenance.origin,
+    sourceFrameId: "sourceFrameId" in target.provenance ? target.provenance.sourceFrameId : null,
+    sourceGenerationId: "sourceGenerationId" in target.provenance ? target.provenance.sourceGenerationId : null,
+    explicitlyEditedAt: target.explicitlyEditedAt?.toISOString() ?? null,
+    createdAt: target.createdAt.toISOString(),
+    updatedAt: target.updatedAt.toISOString(),
+    ...("diagnostics" in target ? { diagnostics: target.diagnostics } : {})
+  };
+}
+
+function frameStoryStateHttpStatus(error: FrameStoryStateServiceError): number {
+  if (error.code === "FRAME_NOT_FOUND") return 404;
+  if (error.code === "DATABASE_ERROR") return 500;
+  return 409;
+}
+
+function serializeCreatedFrame<T extends {
+  continuityEditContract: string;
+  characterCastSource: string | null;
+  characterCastRevision: number;
+  characters: Array<{ characterId: string; order: number }>;
+}>(frame: T) {
+  const { characters, ...record } = frame;
+  return {
+    ...record,
+    continuityEditContract: JSON.parse(frame.continuityEditContract) as unknown,
+    characterIds: [...characters].sort((left, right) => left.order - right.order).map((item) => item.characterId),
+    effectiveCharacterIds: [...characters].sort((left, right) => left.order - right.order).map((item) => item.characterId),
+    characterCastSource: frame.characterCastSource ?? "LEGACY_UNKNOWN",
+    additionalCharacterReferenceIds: {},
+    generations: []
+  };
+}
+
 function serializeProject<T extends { scenes: Array<{
   storyState: { document: string } | null;
   characters?: Array<{ characterId: string; order: number }>;
   frames?: Array<{
     continuityEditContract: string;
+    characterCastSource?: string | null;
+    characterCastRevision?: number;
     characters?: Array<{
       characterId: string;
       order: number;
@@ -630,15 +763,25 @@ function serializeProject<T extends { scenes: Array<{
     scenes: project.scenes.map((scene) => ({
       ...scene,
       characterIds: scene.characters?.sort((left, right) => left.order - right.order).map((item) => item.characterId) ?? [],
-      frames: scene.frames?.map((frame) => ({
+      frames: scene.frames?.map((frame) => {
+        const characterIds = frame.characters?.sort((left, right) => left.order - right.order).map((item) => item.characterId) ?? [];
+        const sceneCharacterIds = scene.characters?.sort((left, right) => left.order - right.order).map((item) => item.characterId) ?? [];
+        const storyState = scene.storyState ? JSON.parse(scene.storyState.document) as { characters?: Record<string, { present?: boolean }> } : null;
+        const legacyStoryIds = Object.entries(storyState?.characters ?? {}).filter(([, state]) => state.present).map(([id]) => id);
+        const effectiveCharacterIds = frame.characterCastSource !== null && frame.characterCastSource !== undefined
+          ? characterIds
+          : characterIds.length ? characterIds : sceneCharacterIds.length ? sceneCharacterIds : legacyStoryIds;
+        return ({
         ...frame,
         continuityEditContract: continuityEditContractSchema.parse(JSON.parse(frame.continuityEditContract) as unknown),
-        characterIds: frame.characters?.sort((left, right) => left.order - right.order).map((item) => item.characterId) ?? [],
+        characterIds,
+        effectiveCharacterIds,
+        characterCastSource: frame.characterCastSource ?? "LEGACY_UNKNOWN",
         additionalCharacterReferenceIds: Object.fromEntries((frame.characters ?? []).map((item) => [
           item.characterId,
           (item.additionalReferences ?? []).sort((left, right) => left.order - right.order).map((selection) => selection.characterReferenceId)
         ]))
-      })),
+      }); }),
       storyState: scene.storyState ? {
         ...scene.storyState,
         document: JSON.parse(scene.storyState.document) as unknown

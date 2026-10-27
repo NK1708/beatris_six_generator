@@ -2,11 +2,16 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import { randomUUID } from "node:crypto";
 import { strToU8, zipSync } from "fflate";
-import type { ContinuityEditContract, FrameGenerationStrategy, ReferenceAsset } from "@bearridge/shared";
+import type { ContinuityEditContract, FrameGenerationReadiness, FrameGenerationReadinessDiagnostic, FrameGenerationReadinessReason, FrameGenerationStrategy, ReferenceAsset } from "@bearridge/shared";
 import type { FrameContext } from "@bearridge/core";
-import { projectDbManager } from "../db.js";
+import { projectDbManager, type ProjectContext } from "../db.js";
 import { AppError } from "../errors.js";
-import { previewFrame } from "./generationService.js";
+import { loadFrameContext } from "./contextService.js";
+import { previewFrameContext } from "./generationService.js";
+import { resolveFrameGenerationReadinessForProject } from "./frameGenerationReadinessService.js";
+import { prepareProductionGenerationContext, type PreparedProductionGenerationContext } from "./productionGenerationContext.js";
+import { ProductionGenerationGate, ProductionGenerationReadinessError } from "./productionGenerationGate.js";
+import { resolveProjectDirectoryForWrite, resolveProjectFileForRead, resolveProjectFileForWrite } from "./projectPathResolver.js";
 
 export interface ChatGPTExportResult {
   exportId: string;
@@ -14,6 +19,33 @@ export interface ChatGPTExportResult {
   buffer: Buffer;
   manifest: ChatGPTExportManifest;
   prompt: string;
+}
+
+type Ready = Extract<FrameGenerationReadiness, { status: "READY" }>;
+type PreparedPreview = Awaited<ReturnType<typeof previewFrameContext>>;
+
+export interface ChatGPTExportPreparation {
+  preview: PreparedPreview;
+  readiness: Ready;
+  target: PreparedProductionGenerationContext;
+  revalidate(): Promise<void>;
+}
+
+export interface ChatGPTExportDependencies {
+  prepare(frameId: string, projectContext?: ProjectContext): Promise<ChatGPTExportPreparation>;
+}
+
+export class ManualChatGPTExportReadinessError extends AppError {
+  constructor(
+    code: "CHATGPT_EXPORT_BLOCKED" | "CHATGPT_EXPORT_READINESS_STALE",
+    readonly reasons: [FrameGenerationReadinessReason, ...FrameGenerationReadinessReason[]],
+    readonly diagnostics: [FrameGenerationReadinessDiagnostic, ...FrameGenerationReadinessDiagnostic[]]
+  ) {
+    super(code === "CHATGPT_EXPORT_READINESS_STALE"
+      ? "ChatGPT export readiness changed while the package was being prepared."
+      : "ChatGPT export is blocked by Frame readiness requirements.", 409, code);
+    this.name = "ManualChatGPTExportReadinessError";
+  }
 }
 
 interface ExportReference {
@@ -98,14 +130,34 @@ interface CanonicalConstraints {
   style: { name: string; description: string; linework: string; anatomy: string; faces: string; shading: string; negativeRules: string } | null;
 }
 
-export async function createChatGPTExport(frameId: string, createdAt = new Date()): Promise<ChatGPTExportResult> {
-  const prepared = await previewFrame(frameId);
+export async function createChatGPTExport(
+  frameId: string,
+  createdAt = new Date(),
+  dependencies: ChatGPTExportDependencies = defaultChatGPTExportDependencies
+): Promise<ChatGPTExportResult> {
+  const lease = projectDbManager.acquireActiveProject();
+  try {
+    return await createChatGPTExportInProject(lease, frameId, createdAt, dependencies);
+  } finally {
+    await lease.release();
+  }
+}
+
+async function createChatGPTExportInProject(
+  activeProject: ProjectContext,
+  frameId: string,
+  createdAt: Date,
+  dependencies: ChatGPTExportDependencies
+): Promise<ChatGPTExportResult> {
+  const preparation = await dependencies.prepare(frameId, activeProject);
+  const prepared = preparation.preview;
   const blockingWarnings = prepared.warnings.filter((warning) => warning.severity === "blocking");
   if (blockingWarnings.length) {
     throw new AppError(`ChatGPT export blocked: ${blockingWarnings.map((warning) => warning.message).join(" ")}`, 400, "PRODUCTION_CONTEXT_INCOMPLETE");
   }
 
-  const { projectPath } = projectDbManager.getActiveProject();
+  const { projectPath } = activeProject;
+  const legacyPathOptions = activeProject.project?.rootPath ? { legacyRootPath: activeProject.project.rootPath } : {};
   const exportId = randomUUID();
   const rootName = `${prepared.context.frame.frameCode}_CHATGPT`;
   const continuation = prepared.strategy === "CONTINUE_PREVIOUS_FRAME";
@@ -118,10 +170,10 @@ export async function createChatGPTExport(frameId: string, createdAt = new Date(
   const baseFileName = continuation
     ? `02_AUTHORITATIVE_BASE_${sanitizeName(prepared.context.previousLockedFrame!.frameCode)}${safeExtension(prepared.baseReference!.filePath)}`
     : undefined;
-  const exportReferences = visualReferences.map((reference, index) => ({
-    source: resolveProjectFile(projectPath, reference.filePath),
+  const exportReferences = await Promise.all(visualReferences.map(async (reference, index) => ({
+    source: await resolveProjectFileForRead(projectPath, reference.filePath, legacyPathOptions),
     manifest: toExportReference(reference, index, continuation ? 3 : 2, continuation)
-  }));
+  })));
   const attachments: PortableAttachment[] = [
     ...(continuation ? [{
       fileName: baseFileName!,
@@ -192,7 +244,7 @@ export async function createChatGPTExport(frameId: string, createdAt = new Date(
     zipEntries[`${rootName}/${reference.manifest.filename}`] = await fs.readFile(reference.source);
   }
   if (manifest.base && prepared.baseReference) {
-    zipEntries[`${rootName}/${manifest.base.filename}`] = await fs.readFile(resolveProjectFile(projectPath, prepared.baseReference.filePath));
+    zipEntries[`${rootName}/${manifest.base.filename}`] = await fs.readFile(await resolveProjectFileForRead(projectPath, prepared.baseReference.filePath, legacyPathOptions));
   }
 
   const receipt = {
@@ -203,7 +255,15 @@ export async function createChatGPTExport(frameId: string, createdAt = new Date(
     fullTargetPrompt: prepared.prompt,
     deltaInstructions: prepared.deltaInstructions ?? null,
     frameSnapshot: prepared.context.frame,
-    storyStateSnapshot: prepared.context.storyState,
+    storyStateSnapshot: preparation.target.targetStoryState,
+    bearridgeMetadata: {
+      targetStoryState: {
+        revision: preparation.target.targetRevision,
+        fingerprint: preparation.target.targetFingerprint,
+        provenance: preparation.target.targetProvenance
+      },
+      selectedPredecessorGenerationId: preparation.target.selectedPredecessorGenerationId ?? null
+    },
     supportingReferences: prepared.references.map((reference) => ({
       id: reference.id,
       code: reference.code,
@@ -214,19 +274,83 @@ export async function createChatGPTExport(frameId: string, createdAt = new Date(
     })),
     visualReferencesActuallyExported: visualReferences.map((reference) => reference.id)
   };
-  zipEntries[`${rootName}/receipt.json`] = strToU8(`${JSON.stringify(receipt, null, 2)}\n`);
-
-  const receiptDirectory = path.join(projectPath, "exports", "chatgpt");
-  await fs.mkdir(receiptDirectory, { recursive: true });
-  await fs.writeFile(path.join(receiptDirectory, `${exportId}.json`), JSON.stringify(receipt, null, 2), "utf8");
+  await preparation.revalidate();
+  const buffer = await savePortableChatGPTPackage(projectPath, rootName, exportId, receipt, zipEntries);
 
   return {
     exportId,
     fileName: `${rootName}.zip`,
-    buffer: Buffer.from(zipSync(zipEntries, { level: 0 })),
+    buffer,
     manifest,
     prompt
   };
+}
+
+export async function savePortableChatGPTPackage(
+  projectPath: string,
+  rootName: string,
+  exportId: string,
+  receipt: object,
+  zipEntries: Record<string, Uint8Array>
+): Promise<Buffer> {
+  zipEntries[`${rootName}/receipt.json`] = strToU8(`${JSON.stringify(receipt, null, 2)}\n`);
+  const buffer = Buffer.from(zipSync(zipEntries, { level: 0 }));
+  const receiptDirectory = await resolveProjectDirectoryForWrite(projectPath, "exports/chatgpt");
+  await fs.mkdir(receiptDirectory, { recursive: true });
+  const receiptPath = await resolveProjectFileForWrite(projectPath, `exports/chatgpt/${exportId}.json`);
+  const temporaryPath = await resolveProjectFileForWrite(projectPath, `exports/chatgpt/${exportId}.${randomUUID()}.tmp`);
+  try {
+    await fs.writeFile(temporaryPath, JSON.stringify(receipt, null, 2), "utf8");
+    await fs.rename(temporaryPath, receiptPath);
+  } catch (error) {
+    await fs.rm(temporaryPath, { force: true });
+    throw error;
+  }
+  return buffer;
+}
+
+const defaultChatGPTExportDependencies: ChatGPTExportDependencies = {
+  prepare: prepareManualChatGPTExport
+};
+
+export async function prepareManualChatGPTExport(
+  frameId: string,
+  active: ProjectContext = projectDbManager.getActiveProject()
+): Promise<ChatGPTExportPreparation> {
+  const gate = new ProductionGenerationGate(() => resolveFrameGenerationReadinessForProject(
+    active.prisma,
+    active.projectPath,
+    frameId
+  ));
+  let readiness: Ready;
+  try {
+    readiness = await gate.open();
+  } catch (error) {
+    throw mapExportReadinessError(error);
+  }
+  const target = prepareProductionGenerationContext(await loadFrameContext(frameId, active), readiness);
+  const preview = await previewFrameContext(target.context, active);
+  return {
+    preview,
+    readiness,
+    target,
+    async revalidate() {
+      try {
+        await gate.revalidate(readiness);
+      } catch (error) {
+        throw mapExportReadinessError(error);
+      }
+    }
+  };
+}
+
+function mapExportReadinessError(error: unknown): Error {
+  if (!(error instanceof ProductionGenerationReadinessError)) return error instanceof Error ? error : new Error("Unknown export readiness error.");
+  return new ManualChatGPTExportReadinessError(
+    error.code === "GENERATION_READINESS_STALE" ? "CHATGPT_EXPORT_READINESS_STALE" : "CHATGPT_EXPORT_BLOCKED",
+    error.reasons,
+    error.diagnostics
+  );
 }
 
 function toExportReference(reference: ReferenceAsset, index: number, firstNumber: number, continuation: boolean): ExportReference {
@@ -541,11 +665,8 @@ function selectContinuationVisualReferences(references: ReferenceAsset[]): Refer
 }
 
 function buildCanonicalConstraints(context: FrameContext): CanonicalConstraints {
-  const selectedIds = new Set(context.frame.characterIds);
-  const characters = context.characters.filter((character) => selectedIds.size
-    ? selectedIds.has(character.id)
-    : context.storyState.characters[character.id]?.present
-  ).map((character) => {
+  const selectedIds = new Set(context.frame.effectiveCharacterIds ?? context.frame.characterIds);
+  const characters = context.characters.filter((character) => selectedIds.has(character.id)).map((character) => {
     const outfit = character.outfits.find((candidate) => candidate.id === context.storyState.characters[character.id]?.outfitId);
     return {
       id: character.id,
@@ -587,15 +708,6 @@ function prefixedFacts(prefix: string, values: string[]): string[] {
 
 function listOrNone(values: string[] | undefined): string[] {
   return values?.length ? values.map((value) => `- ${value}`) : ["- None specified."];
-}
-
-function resolveProjectFile(projectPath: string, filePath: string): string {
-  const resolvedRoot = path.resolve(projectPath);
-  const resolved = path.resolve(resolvedRoot, filePath);
-  if (resolved !== resolvedRoot && !resolved.startsWith(`${resolvedRoot}${path.sep}`)) {
-    throw new AppError("Resolved reference is outside the active project folder.", 400, "INVALID_REFERENCE_PATH");
-  }
-  return resolved;
 }
 
 function sanitizeName(value: string): string {

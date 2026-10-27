@@ -4,8 +4,8 @@ import { buildCompositionSafeAreaInstruction } from "./generationGeometryResolve
 
 export class PromptBuilder {
   build(context: FrameContext, references: ReferenceAsset[], geometry?: GenerationGeometryResult): string {
-    const selectedIds = new Set(context.frame.characterIds);
-    const presentCharacters = context.characters.filter((character) => selectedIds.size ? selectedIds.has(character.id) : context.storyState.characters[character.id]?.present);
+    const selectedIds = new Set(context.frame.effectiveCharacterIds ?? context.frame.characterIds);
+    const presentCharacters = context.characters.filter((character) => selectedIds.has(character.id));
     const characterState = presentCharacters.flatMap((character) => {
       const state = context.storyState.characters[character.id];
       const outfit = character.outfits.find((candidate) => candidate.id === state?.outfitId);
@@ -167,6 +167,8 @@ export class PromptBuilder {
 
   buildContinuationInstructions(context: FrameContext): string {
     const frame = context.frame;
+    const currentCast = frame.effectiveCharacterIds ?? frame.characterIds;
+    const removesAllPreviousCharacters = currentCast.length === 0 && Boolean(context.previousFrameCharacterIds?.length);
     return [
       "EDIT THE PROVIDED PREVIOUS FRAME.",
       "The previous frame is the authoritative visual base.",
@@ -175,6 +177,8 @@ export class PromptBuilder {
       "Canonical references are supporting constraints. Preserve identity, canon, and style without redesigning unrelated content from the base image.",
       "Do not invent props, furniture, architecture, characters, or decorations unless explicitly requested.",
       "Apply only the following current Frame and Story State changes:",
+      removesAllPreviousCharacters ? "Current frame contains no visible characters." : "",
+      removesAllPreviousCharacters ? "Do not carry over characters from the previous frame." : "",
       frame.description ? `Description: ${frame.description}` : "",
       frame.action ? `Action: ${frame.action}` : "",
       frame.camera ? `Camera change: ${frame.camera}` : "",

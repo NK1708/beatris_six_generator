@@ -3,6 +3,7 @@ import path from "node:path";
 import OpenAI from "openai";
 import type { EditRequest, GenerationRequest, GenerationResult, ImageProvider, ReferenceAsset } from "@bearridge/shared";
 import { AppError } from "../errors.js";
+import { resolveProjectFileForRead, resolveProjectFileForWrite, toProjectRelativePath } from "../services/projectPathResolver.js";
 
 const responsesModel = "gpt-6-astra";
 
@@ -52,6 +53,7 @@ export interface OpenAIProviderOptions {
   model: string;
   outputFilePath: string;
   rootPath: string;
+  legacyRootPath?: string;
   client?: OpenAIClient;
 }
 
@@ -92,9 +94,7 @@ export class OpenAIImageProvider implements ImageProvider {
 
     const content: OpenAIInputContent[] = [{ type: "input_text", text: request.prompt }];
     for (const [index, reference] of references.entries()) {
-      const imagePath = path.isAbsolute(reference.filePath)
-        ? reference.filePath
-        : path.join(this.options.rootPath, reference.filePath);
+      const imagePath = await resolveProjectFileForRead(this.options.rootPath, reference.filePath, this.options.legacyRootPath ? { legacyRootPath: this.options.legacyRootPath } : {});
       const image = await fs.readFile(imagePath);
       const mimeType = mimeFromImageFile(imagePath, image);
       content.push({ type: "input_text", text: referenceInstruction(reference, index + 1) });
@@ -125,14 +125,14 @@ export class OpenAIImageProvider implements ImageProvider {
       throw new AppError("OpenAI did not return an image.", 502, "INVALID_IMAGE_RESPONSE");
     }
 
-    const outputFilePath = outputPathForPng(this.options.outputFilePath);
+    const outputFilePath = await resolveProjectFileForWrite(this.options.rootPath, toProjectRelativePath(this.options.rootPath, outputPathForPng(this.options.outputFilePath)));
     await fs.mkdir(path.dirname(outputFilePath), { recursive: true });
     await fs.writeFile(outputFilePath, Buffer.from(imageCall.result, "base64"));
 
     return {
       provider: "openai",
       model: this.options.model,
-      outputFilePath: path.relative(this.options.rootPath, outputFilePath).replace(/\\/g, "/"),
+      outputFilePath: toProjectRelativePath(this.options.rootPath, outputFilePath),
       rawMetadata: {
         responseId: response.id,
         responseModel: response.model,

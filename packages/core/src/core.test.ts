@@ -8,6 +8,25 @@ import { ReferenceResolver } from "./referenceResolver.js";
 import { createEmptyStoryState, parseStoryState } from "./storyState.js";
 import { detectStructuredContinuityChanges, effectiveAllowedChanges } from "./continuityEditContract.js";
 import type { FrameContext } from "./domain.js";
+import { resolveEffectiveFrameCast } from "./frameCast.js";
+
+describe("effective Frame cast", () => {
+  it("preserves explicit and inherited empty casts", () => {
+    for (const source of ["EXPLICIT", "INHERITED_SCENE"] as const) {
+      expect(resolveEffectiveFrameCast({ source, characterIds: [], sceneCharacterIds: ["scene"], storyStatePresentCharacterIds: ["story"] }).effectiveCharacterIds).toEqual([]);
+    }
+  });
+
+  it("centralizes legacy frame, scene and Story State fallback", () => {
+    expect(resolveEffectiveFrameCast({ source: null, characterIds: [], sceneCharacterIds: ["scene"], storyStatePresentCharacterIds: ["story"] }).effectiveCharacterIds).toEqual(["scene"]);
+    expect(resolveEffectiveFrameCast({ source: null, characterIds: [], sceneCharacterIds: [], storyStatePresentCharacterIds: ["story"] }).effectiveCharacterIds).toEqual(["story"]);
+  });
+
+  it("emits a structured removal instruction when continuation cast becomes empty", () => {
+    const empty = { ...context, frame: { ...context.frame, characterIds: [], effectiveCharacterIds: [] }, previousFrameCharacterIds: ["character-1"] };
+    expect(new PromptBuilder().buildContinuationInstructions(empty)).toContain("Current frame contains no visible characters.\nDo not carry over characters from the previous frame.");
+  });
+});
 
 const context: FrameContext = {
   project: {
@@ -47,12 +66,20 @@ const context: FrameContext = {
     previousFrameId: "frame-0",
     selectedGenerationId: null,
     characterIds: [],
+    effectiveCharacterIds: ["character-1"],
     locationId: "location-1",
     locationAngleId: null,
     styleProfileId: "style-1",
     targetWidth: null,
     targetHeight: null,
     targetAspectRatio: null
+  },
+  sceneCurrentStoryState: createEmptyStoryState("scene-1"),
+  frameTargetStoryState: { status: "MISSING", frameId: "frame-1", legacy: true },
+  continuityBaseline: {
+    status: "UNAVAILABLE",
+    reason: "NOT_LOCKED",
+    diagnostic: { kind: "MISSING", severity: "blocking", code: "NOT_LOCKED", message: "Test fixture has no locked predecessor." }
   },
   storyState: {
     sceneId: "scene-1",
@@ -347,10 +374,10 @@ describe("ReferenceResolver", () => {
     }));
   });
 
-  it("uses frame character links before falling back to present characters in Story State", () => {
+  it("uses authoritative effective Frame cast instead of Story State presence", () => {
     const result = new ReferenceResolver().resolve({
       ...context,
-      frame: { ...context.frame, characterIds: ["character-2"] },
+      frame: { ...context.frame, characterIds: ["character-2"], effectiveCharacterIds: ["character-2"] },
       characters: [
         ...context.characters,
         {

@@ -3,6 +3,7 @@ import path from "node:path";
 import { GoogleGenAI, type GenerateContentResponse, type Part } from "@google/genai";
 import type { EditRequest, GenerationRequest, GenerationResult, ImageProvider, ReferenceAsset } from "@bearridge/shared";
 import { AppError } from "../errors.js";
+import { resolveProjectFileForRead, resolveProjectFileForWrite, toProjectRelativePath } from "../services/projectPathResolver.js";
 
 export type GeminiClient = {
   models: {
@@ -25,6 +26,7 @@ export interface GeminiProviderOptions {
   model: string;
   outputFilePath: string;
   rootPath: string;
+  legacyRootPath?: string;
   client?: GeminiClient;
 }
 
@@ -38,14 +40,14 @@ export class GeminiImageProvider implements ImageProvider {
     if (!image) {
       throw new AppError("Gemini did not return an image.", 502, "INVALID_IMAGE_RESPONSE");
     }
-    const outputFilePath = outputPathForMime(this.options.outputFilePath, image.mimeType);
+    const outputFilePath = await resolveProjectFileForWrite(this.options.rootPath, toProjectRelativePath(this.options.rootPath, outputPathForMime(this.options.outputFilePath, image.mimeType)));
     await fs.mkdir(path.dirname(outputFilePath), { recursive: true });
     await fs.writeFile(outputFilePath, Buffer.from(image.data, "base64"));
 
     return {
       provider: "gemini",
       model: this.options.model,
-      outputFilePath: path.relative(this.options.rootPath, outputFilePath).replace(/\\/g, "/"),
+      outputFilePath: toProjectRelativePath(this.options.rootPath, outputFilePath),
       rawMetadata: metadataFromResponse(response, request.references, false, image.mimeType),
       createdAt: new Date()
     };
@@ -70,14 +72,14 @@ export class GeminiImageProvider implements ImageProvider {
     if (!image) {
       throw new AppError("Gemini did not return an image.", 502, "INVALID_IMAGE_RESPONSE");
     }
-    const outputFilePath = outputPathForMime(this.options.outputFilePath, image.mimeType);
+    const outputFilePath = await resolveProjectFileForWrite(this.options.rootPath, toProjectRelativePath(this.options.rootPath, outputPathForMime(this.options.outputFilePath, image.mimeType)));
     await fs.mkdir(path.dirname(outputFilePath), { recursive: true });
     await fs.writeFile(outputFilePath, Buffer.from(image.data, "base64"));
 
     return {
       provider: "gemini",
       model: this.options.model,
-      outputFilePath: path.relative(this.options.rootPath, outputFilePath).replace(/\\/g, "/"),
+      outputFilePath: toProjectRelativePath(this.options.rootPath, outputFilePath),
       rawMetadata: metadataFromResponse(response, repairReferences, true, image.mimeType),
       createdAt: new Date()
     };
@@ -93,7 +95,7 @@ export class GeminiImageProvider implements ImageProvider {
     const contents: Part[] = [{ text: prompt }];
 
     for (const [index, reference] of references.entries()) {
-      const imagePath = path.isAbsolute(reference.filePath) ? reference.filePath : path.join(this.options.rootPath, reference.filePath);
+      const imagePath = await resolveProjectFileForRead(this.options.rootPath, reference.filePath, this.options.legacyRootPath ? { legacyRootPath: this.options.legacyRootPath } : {});
       const image = await fs.readFile(imagePath);
       const mimeType = mimeFromImageFile(imagePath, image);
       contents.push({ text: referenceInstruction(reference, index + 1) });

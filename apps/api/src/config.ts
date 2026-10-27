@@ -1,4 +1,5 @@
 import fs from "node:fs";
+import os from "node:os";
 import path from "node:path";
 import dotenv from "dotenv";
 import { z } from "zod";
@@ -16,10 +17,15 @@ const configSchema = z.object({
 });
 
 const parsed = configSchema.parse(process.env);
+const isTestRuntime = process.env.VITEST === "true";
+const projectsRoot = isTestRuntime
+  ? path.join(os.tmpdir(), `bearridge-vitest-${process.pid}`)
+  : path.resolve(process.cwd(), parsed.PROJECTS_ROOT);
 
 export const config = {
   databaseUrl: parsed.DATABASE_URL,
-  projectsRoot: path.resolve(process.cwd(), parsed.PROJECTS_ROOT),
+  projectsRoot,
+  runtimeMode: isTestRuntime ? "test" as const : process.env.NODE_ENV === "production" ? "production" as const : "development" as const,
   imageProvider: parsed.IMAGE_PROVIDER ?? (parsed.GEMINI_API_KEY ? "gemini" : "mock"),
   geminiApiKey: parsed.GEMINI_API_KEY,
   openaiApiKey: parsed.OPENAI_API_KEY,

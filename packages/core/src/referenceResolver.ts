@@ -8,10 +8,8 @@ export class ReferenceResolver {
   resolve(context: FrameContext): ResolvedReferences {
     const references: ReferenceAsset[] = [];
     const warnings: ResolverWarning[] = [];
-    const selectedCharacterIds = new Set(context.frame.characterIds);
-    const frameCharacters = context.characters.filter((character) => (
-      selectedCharacterIds.size ? selectedCharacterIds.has(character.id) : context.storyState.characters[character.id]?.present
-    ));
+    const selectedCharacterIds = new Set(context.frame.effectiveCharacterIds ?? context.frame.characterIds);
+    const frameCharacters = context.characters.filter((character) => selectedCharacterIds.has(character.id));
 
     for (const character of frameCharacters) {
       const state = context.storyState.characters[character.id];

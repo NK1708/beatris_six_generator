@@ -1,0 +1,259 @@
+{
+  "exportId": "d2b22778-58ce-4b5b-92aa-6a36f04db72c",
+  "createdAt": "2026-09-25T13:37:26.783Z",
+  "manifest": {
+    "schemaVersion": 1,
+    "exportId": "d2b22778-58ce-4b5b-92aa-6a36f04db72c",
+    "project": {
+      "id": "cmtmvlm680000ufuswbjrtb8v",
+      "name": "test1"
+    },
+    "frame": {
+      "id": "cmugzzynp0001ufgge8vplg8o",
+      "code": "S001_F003"
+    },
+    "exportType": "CHATGPT_IMAGE_PACKAGE",
+    "createdAt": "2026-09-25T13:37:26.783Z",
+    "strategy": "CONTINUE_PREVIOUS_FRAME",
+    "continuityEditContract": {
+      "changes": [
+        "Birdman turns only his head toward the closed door",
+        "Birdman's hands are empty"
+      ],
+      "forbidden": [
+        "Do not move Birdman's body",
+        "Do not move Birdman away from his current position",
+        "Do not add any new props",
+        "Do not place anything in Birdman's hands",
+        "Do not change Birdman's outfit",
+        "Do not change the camera or framing",
+        "Do not move or redesign any furniture",
+        "Do not change the room geometry",
+        "Do not change the lighting, brightness, palette, or visual style",
+        "Do not increase character or environment detail",
+        "Do not show a cup or mug anywhere in the frame"
+      ],
+      "allowedChanges": []
+    },
+    "base": {
+      "frameId": "cmufi7xu90001ufs0m3khlpmb",
+      "generationId": "cmugzmbjj000dufmgviqd5we2",
+      "frameCode": "S001_F002",
+      "filename": "base/previous-frame_S001_F002.png"
+    },
+    "geometry": {
+      "targetWidth": 1200,
+      "targetHeight": 675,
+      "targetAspectRatio": 1.7777777777777777,
+      "requestAspectRatio": "16:9",
+      "requestResolution": "1536x864",
+      "requiresCrop": false,
+      "cropStrategy": "NONE"
+    },
+    "references": [
+      {
+        "order": 1,
+        "filename": "references/01_CHARACTER_BIRDMAN_MASTER_V1.jpg",
+        "id": "cmtmzcdg40005ufiwarkas4ak",
+        "code": "CHAR_BIRDMAN_MASTER_V1",
+        "kind": "character",
+        "label": "Character: Birdman / MASTER V1",
+        "role": "Canonical identity reference for Birdman.",
+        "priority": 10
+      },
+      {
+        "order": 2,
+        "filename": "references/02_OUTFIT_BIRDMAN_BLACK_OVERCOAT.jpg",
+        "id": "cmtmzd9840007ufiwxmac4rvj",
+        "code": "OUTFIT_BIRDMAN_ОБРАЗ_1_MASTER_V1",
+        "kind": "outfit",
+        "label": "Outfit: Birdman / Black Overcoat / OUTFIT_BIRDMAN_ОБРАЗ_1_MASTER_V1",
+        "role": "Canonical outfit reference for Birdman / Black Overcoat.",
+        "priority": 20
+      },
+      {
+        "order": 3,
+        "filename": "references/03_LOCATION_OFFICE_LOUNGE_MASTER_V1.jpg",
+        "id": "cmtmxffxf000buft000o1gepz",
+        "code": "LOC_OFFICE_LOUNGE_MASTER_V1",
+        "kind": "location",
+        "label": "Location: Office Lounge / MASTER V1",
+        "role": "Canonical location reference for Office Lounge.",
+        "priority": 30
+      },
+      {
+        "order": 4,
+        "filename": "references/04_STYLE_BEARRIDGE_MINIMAL_FLAT.png",
+        "id": "cmtmyfm3l0001ufvgm34brest",
+        "code": "STYLE_BEARRIDGE_MINIMAL_FLAT_REF_V1",
+        "kind": "style",
+        "label": "Style: Bearridge Minimal Flat / STYLE_BEARRIDGE_MINIMAL_FLAT_REF_V1",
+        "role": "Canonical visual style guidance. Use for style consistency only, not as source of scene content.",
+        "priority": 40
+      },
+      {
+        "order": 5,
+        "filename": "references/05_STYLE_BEARRIDGE_MINIMAL_FLAT.png",
+        "id": "cmtmyfofz0003ufvg1d9kabu4",
+        "code": "STYLE_BEARRIDGE_MINIMAL_FLAT_REF_V2",
+        "kind": "style",
+        "label": "Style: Bearridge Minimal Flat / STYLE_BEARRIDGE_MINIMAL_FLAT_REF_V2",
+        "role": "Canonical visual style guidance. Use for style consistency only, not as source of scene content.",
+        "priority": 41
+      },
+      {
+        "order": 6,
+        "filename": "references/06_STYLE_BEARRIDGE_MINIMAL_FLAT.png",
+        "id": "cmtmyfq040005ufvg6u6pxaci",
+        "code": "STYLE_BEARRIDGE_MINIMAL_FLAT_REF_V3",
+        "kind": "style",
+        "label": "Style: Bearridge Minimal Flat / STYLE_BEARRIDGE_MINIMAL_FLAT_REF_V3",
+        "role": "Canonical visual style guidance. Use for style consistency only, not as source of scene content.",
+        "priority": 42
+      },
+      {
+        "order": 7,
+        "filename": "references/07_STYLE_BEARRIDGE_MINIMAL_FLAT.png",
+        "id": "cmtmyfrnm0007ufvgod7viuc2",
+        "code": "STYLE_BEARRIDGE_MINIMAL_FLAT_REF_V4",
+        "kind": "style",
+        "label": "Style: Bearridge Minimal Flat / STYLE_BEARRIDGE_MINIMAL_FLAT_REF_V4",
+        "role": "Canonical visual style guidance. Use for style consistency only, not as source of scene content.",
+        "priority": 43
+      }
+    ]
+  },
+  "fullTargetPrompt": "PROJECT:\ntest1\n\nFRAME:\nS001_F003\n\nTYPE:\nCG\n\nCANONICAL ASSETS:\nCharacter: Birdman\nDescription: Adult man with light skin and a tall, broad-shouldered build. Short black hair, neatly styled with a slight side part. Thick black mustache. Rectangular black-framed glasses. Long, slightly angular face with a prominent nose and a strong jawline. Calm, serious appearance. Clean, minimalist graphic character design with simplified facial features and proportions.\nBody: Tall, broad-shouldered adult male with a solid build. Straight posture, moderately long legs, broad upper torso, and natural adult male proportions.\nFace: Long, slightly angular face with a prominent straight nose, strong jawline, and simplified facial features. Light skin. Thick black mustache. Rectangular black-framed glasses.\nHair canon: Short black hair, neatly styled with a slight side part. Smooth, controlled silhouette with a small outward flick near the side/back.\nImmutable character features: Light skin. Short black side-parted hair. Thick black mustache. Rectangular black-framed glasses. Long slightly angular face. Prominent nose. Strong jawline. Tall broad-shouldered build.\nLocation: Office Lounge\nDescription: Small modern office lounge with muted blue walls and a minimalist interior. A large dark brown sofa stands along the left side of the room, with a rectangular wooden coffee table in front of it. A light-colored office desk is positioned against the far-right side, with a black drip coffee maker on top. A white door with a brass-colored round handle is located on the left wall. The room has a blue-gray floor, white baseboards, and a rectangular ceiling light.\nArchitecture: Rectangular enclosed room with flat blue walls, a blue-gray floor, white baseboards, and a flat ceiling. White single door on the left wall. Large brown sofa positioned along the left side; low rectangular wooden coffee table in the foreground; light-colored rectangular desk positioned toward the rear-right wall. The relative positions and proportions of these architectural and furniture elements should remain consistent between views.\nStyle: Bearridge Minimal Flat\nDescription: Minimalist 2D flat illustration style with simplified geometric forms and a restrained, muted color palette. Characters, objects and environments are constructed from large clean color shapes with very limited internal detail. No visible decorative outlines, no realistic textures, no gradients and no photorealistic rendering. Human anatomy and facial features are intentionally simplified while preserving clear silhouettes and recognizable proportions. Clothing is represented with broad flat shapes and only a few simplified folds. Environments use simplified geometry and reduced architectural detail. The overall image should feel graphic, clean, restrained and cinematic.\nLighting: Simplified graphic lighting using large flat areas of light and shadow. Shadows are broad, hard-edged and minimally detailed rather than physically realistic. Avoid complex light gradients, soft volumetric illumination, glossy reflections, bloom and detailed ambient lighting. Lighting should primarily support composition, silhouettes and separation of forms while preserving the flat illustrated appearance.\nPalette: Restrained muted color palette dominated by dark desaturated blue, teal, charcoal, muted gray, olive and warm brown tones. Skin tones and occasional warm highlights may provide controlled contrast. Use solid flat colors with a limited number of distinct tones per object. Avoid highly saturated colors, colorful gradients and excessive color variation.\nLine: Shape-driven illustration with little to no visible contour linework. Forms should be defined primarily by adjacent flat color areas and silhouettes rather than outlines. Avoid thin decorative lines, sketch lines, comic-style ink outlines and excessive internal line detail.\nAnatomy: Simplified but believable human anatomy with natural adult proportions. Bodies should remain clearly readable through strong silhouettes and large geometric shapes. Reduce anatomical detail while preserving correct limb placement, posture and overall proportions. Avoid exaggerated cartoon anatomy and photorealistic anatomical detail.\nFaces: Facial features are strongly simplified and graphic. Characters have no visible eyes: do not draw eyeballs, irises, pupils, eye whites, eyelashes, or detailed eye shapes. The eye area is represented only through simplified facial geometry, brow shapes, shadow shapes, or may be omitted entirely. Preserve character identity through face shape, hairstyle, eyebrows, nose, mouth, facial hair, glasses, and other distinctive features. No realistic skin texture or detailed facial rendering.\nShading: Minimal flat shading. Use a small number of large, hard-edged shadow shapes rather than smooth tonal transitions. Shadows may simplify or merge details into broad dark areas. No gradients, soft airbrushed shading, ambient occlusion, complex reflections or realistic material rendering.\nBackgrounds: Simplified graphic environments built from large geometric shapes and broad areas of flat color. Preserve important architecture, spatial layout, furniture placement and scene readability while removing unnecessary decorative detail and texture. Backgrounds should use the same visual abstraction as the characters and should never become photorealistic.\nCamera: Cinematic but restrained composition using believable perspective and clear staging. Allow wide shots, medium shots, close-ups and varied viewing angles as required by the scene. Prioritize readable silhouettes and composition. Avoid exaggerated wide-angle distortion, fisheye effects, extreme perspective and unnecessary depth-of-field effects.\nNegative rules: No photorealism. No 3D-rendered appearance. No realistic textures. No gradients. No glossy materials. No painterly brushwork. No sketch lines. No detailed comic-book outlines. No visible eyes, eyeballs, pupils, irises, eye whites, eyelashes, or realistic eye details. No detailed facial rendering. No detailed fabric texture. No complex reflections. No bloom. No volumetric lighting. No photographic depth of field. No excessive small details. Do not introduce visual detail absent from the established minimalist flat style.\n\nSCENE NARRATIVE CONTEXT:\nWaiting in the Office Lounge\nBirdman is alone in the office lounge, waiting for a meeting. The room is quiet and still. He remains calm and composed while waiting, with no other characters present.\nScene time: Late afternoon\nScene characters: Birdman\n\nCHARACTERS:\nBirdman\n\nCURRENT STORY STATE:\nBirdman:\nOutfit: Black Overcoat\nOutfit description: Formal monochrome black outfit consisting of a long black overcoat with wide lapels, a fitted black turtleneck, straight black trousers, and polished black dress shoes. The silhouette is clean, structured, and understated, with no visible bright accents or decorative patterns.\nOutfit immutable features: Long black overcoat with wide lapels; black turtleneck; straight black trousers; black dress shoes; monochrome black color palette; no visible logos, patterns, bright colors, or decorative accessories.\nHair: neatly styled, unchanged from canonical reference\nEmotion: calm\nPose: natural upright standing posture\nPosition: standing beside the coffee maker\nTime: Late afternoon\ndoor: closed\n\nFRAME INSTRUCTIONS:\nCAMERA:\nKeep exactly the same camera position, angle, framing, and shot size as S001_F002.\nCinematic but restrained composition using believable perspective and clear staging. Allow wide shots, medium shots, close-ups and varied viewing angles as required by the scene. Prioritize readable silhouettes and composition. Avoid exaggerated wide-angle distortion, fisheye effects, extreme perspective and unnecessary depth-of-field effects.\n\nCOMPOSITION:\nPreserve the composition established in S001_F002. Birdman remains beside the coffee maker. Keep the sofa, coffee table, desk, coffee maker, door, and all room geometry in the same positions.\n\nACTION:\nBirdman remains standing beside the coffee maker. His body stays in the same position, but he turns his head toward the closed door as if he has just heard a sound. Both arms hang naturally at his sides. His hands are empty.\n\nEXPRESSION:\nCalm, alert expression. Natural upright standing posture. Only Birdman's head turns toward the door. Preserve his body position, proportions, Black Overcoat, glasses, mustache, hairstyle, and simplified facial design. No visible eyes.\n\nLIGHTING:\nKeep exactly the same lighting, shadows, brightness, color palette, and level of visual detail as S001_F002.\n\nCONTINUITY:\nContinue directly from S001_F002. Birdman remains in the same standing position beside the coffee maker. His hands are empty and no cup, mug, or other held object is present. He has heard a sound and turns only his head toward the closed door. Preserve everything else from the previous frame.\n- Birdman is waiting for someone to arrive.\n\nREFERENCE IDS:\n- CHAR_BIRDMAN_MASTER_V1\n- OUTFIT_BIRDMAN_ОБРАЗ_1_MASTER_V1\n- LOC_OFFICE_LOUNGE_MASTER_V1\n- STYLE_BEARRIDGE_MINIMAL_FLAT_REF_V1\n- STYLE_BEARRIDGE_MINIMAL_FLAT_REF_V2\n- STYLE_BEARRIDGE_MINIMAL_FLAT_REF_V3\n- STYLE_BEARRIDGE_MINIMAL_FLAT_REF_V4\n\nREFERENCE ROLES:\nReference 1:\nCanonical identity reference for Birdman.\n\nReference 2:\nCanonical outfit reference for Birdman / Black Overcoat.\n\nReference 3:\nCanonical location reference for Office Lounge.\n\nReference 4:\nCanonical visual style guidance. Use for style consistency only, not as source of scene content.\n\nReference 5:\nCanonical visual style guidance. Use for style consistency only, not as source of scene content.\n\nReference 6:\nCanonical visual style guidance. Use for style consistency only, not as source of scene content.\n\nReference 7:\nCanonical visual style guidance. Use for style consistency only, not as source of scene content.\n\nCANONICAL IDENTITY:\nCharacter references define exact identity. Do not redesign the character.\n\nPRESERVE:\n- facial identity\n- facial proportions\n- apparent age\n- hairstyle\n- body proportions\n- outfit design\n- room architecture\n- furniture\n- visual style\n\nDO NOT:\n- add accessories\n- change clothing\n- change hair\n- redesign furniture\n- alter permanent architecture\n- invent new props\n- No photorealism. No 3D-rendered appearance. No realistic textures. No gradients. No glossy materials. No painterly brushwork. No sketch lines. No detailed comic-book outlines. No visible eyes, eyeballs, pupils, irises, eye whites, eyelashes, or realistic eye details. No detailed facial rendering. No detailed fabric texture. No complex reflections. No bloom. No volumetric lighting. No photographic depth of field. No excessive small details. Do not introduce visual detail absent from the established minimalist flat style.",
+  "deltaInstructions": "EDIT THE PROVIDED PREVIOUS FRAME.\nThe previous frame is the authoritative visual base.\nPreserve everything from the base image unless explicitly changed by the current Frame.\nPreserve camera position and framing unless changed below; room architecture; furniture geometry and placement; unchanged props; lighting unless changed below; visual style; and unchanged character identity, outfit, and state.\nCanonical references are supporting constraints. Preserve identity, canon, and style without redesigning unrelated content from the base image.\nDo not invent props, furniture, architecture, characters, or decorations unless explicitly requested.\nApply only the following current Frame and Story State changes:\nDescription: Birdman remains standing beside the coffee maker after hearing a sound from the direction of the door.\nAction: Birdman remains standing beside the coffee maker. His body stays in the same position, but he turns his head toward the closed door as if he has just heard a sound. Both arms hang naturally at his sides. His hands are empty.\nCamera change: Keep exactly the same camera position, angle, framing, and shot size as S001_F002.\nComposition change: Preserve the composition established in S001_F002. Birdman remains beside the coffee maker. Keep the sofa, coffee table, desk, coffee maker, door, and all room geometry in the same positions.\nLighting change: Keep exactly the same lighting, shadows, brightness, color palette, and level of visual detail as S001_F002.\nExpression / pose change: Calm, alert expression. Natural upright standing posture. Only Birdman's head turns toward the door. Preserve his body position, proportions, Black Overcoat, glasses, mustache, hairstyle, and simplified facial design. No visible eyes.\nContinuity notes: Continue directly from S001_F002. Birdman remains in the same standing position beside the coffee maker. His hands are empty and no cup, mug, or other held object is present. He has heard a sound and turns only his head toward the closed door. Preserve everything else from the previous frame.\nCurrent Story State: {\"sceneId\":\"cmtmyy8n20001uf583uas8kju\",\"time\":{\"description\":\"Late afternoon\"},\"environment\":{\"door\":\"closed\"},\"characters\":{\"cmtmwdlnl0002ufusmp4f4of6\":{\"present\":true,\"outfitId\":\"cmtmwpes40003uftkx1f077j3\",\"emotion\":\"calm\",\"pose\":\"natural upright standing posture\",\"hairState\":\"neatly styled, unchanged from canonical reference\",\"locationPosition\":\"standing beside the coffee maker\"}},\"props\":{},\"storyFacts\":[\"Birdman is waiting for someone to arrive.\"]}",
+  "frameSnapshot": {
+    "id": "cmugzzynp0001ufgge8vplg8o",
+    "sceneId": "cmtmyy8n20001uf583uas8kju",
+    "sequence": 3,
+    "frameCode": "S001_F003",
+    "type": "CG",
+    "status": "DRAFT",
+    "generationStrategy": "CONTINUE_PREVIOUS_FRAME",
+    "continuityEditContract": {
+      "changes": [
+        "Birdman turns only his head toward the closed door",
+        "Birdman's hands are empty"
+      ],
+      "forbidden": [
+        "Do not move Birdman's body",
+        "Do not move Birdman away from his current position",
+        "Do not add any new props",
+        "Do not place anything in Birdman's hands",
+        "Do not change Birdman's outfit",
+        "Do not change the camera or framing",
+        "Do not move or redesign any furniture",
+        "Do not change the room geometry",
+        "Do not change the lighting, brightness, palette, or visual style",
+        "Do not increase character or environment detail",
+        "Do not show a cup or mug anywhere in the frame"
+      ],
+      "allowedChanges": []
+    },
+    "description": "Birdman remains standing beside the coffee maker after hearing a sound from the direction of the door.",
+    "action": "Birdman remains standing beside the coffee maker. His body stays in the same position, but he turns his head toward the closed door as if he has just heard a sound. Both arms hang naturally at his sides. His hands are empty.",
+    "camera": "Keep exactly the same camera position, angle, framing, and shot size as S001_F002.",
+    "composition": "Preserve the composition established in S001_F002. Birdman remains beside the coffee maker. Keep the sofa, coffee table, desk, coffee maker, door, and all room geometry in the same positions.",
+    "lighting": "Keep exactly the same lighting, shadows, brightness, color palette, and level of visual detail as S001_F002.",
+    "expressionNotes": "Calm, alert expression. Natural upright standing posture. Only Birdman's head turns toward the door. Preserve his body position, proportions, Black Overcoat, glasses, mustache, hairstyle, and simplified facial design. No visible eyes.",
+    "continuityNotes": "Continue directly from S001_F002. Birdman remains in the same standing position beside the coffee maker. His hands are empty and no cup, mug, or other held object is present. He has heard a sound and turns only his head toward the closed door. Preserve everything else from the previous frame.",
+    "previousFrameId": "cmufi7xu90001ufs0m3khlpmb",
+    "selectedGenerationId": null,
+    "characterIds": [
+      "cmtmwdlnl0002ufusmp4f4of6"
+    ],
+    "additionalCharacterReferenceIds": {
+      "cmtmwdlnl0002ufusmp4f4of6": []
+    },
+    "locationId": "cmtmxe6xa0009uft0chtr5dpv",
+    "locationAngleId": null,
+    "styleProfileId": "cmtmxymmk0003ufds9loziorw",
+    "targetWidth": 1200,
+    "targetHeight": 675,
+    "targetAspectRatio": 1.777777777777778
+  },
+  "storyStateSnapshot": {
+    "sceneId": "cmtmyy8n20001uf583uas8kju",
+    "time": {
+      "description": "Late afternoon"
+    },
+    "environment": {
+      "door": "closed"
+    },
+    "characters": {
+      "cmtmwdlnl0002ufusmp4f4of6": {
+        "present": true,
+        "outfitId": "cmtmwpes40003uftkx1f077j3",
+        "emotion": "calm",
+        "pose": "natural upright standing posture",
+        "hairState": "neatly styled, unchanged from canonical reference",
+        "locationPosition": "standing beside the coffee maker"
+      }
+    },
+    "props": {},
+    "storyFacts": [
+      "Birdman is waiting for someone to arrive."
+    ]
+  },
+  "supportingReferences": [
+    {
+      "id": "cmtmzcdg40005ufiwarkas4ak",
+      "code": "CHAR_BIRDMAN_MASTER_V1",
+      "kind": "character",
+      "filePath": "characters/birdman/birdman.jpg",
+      "priority": 10,
+      "role": "Canonical identity reference for Birdman."
+    },
+    {
+      "id": "cmtmzd9840007ufiwxmac4rvj",
+      "code": "OUTFIT_BIRDMAN_ОБРАЗ_1_MASTER_V1",
+      "kind": "outfit",
+      "filePath": "characters/birdman/outfits/образ-1/birdman.jpg",
+      "priority": 20,
+      "role": "Canonical outfit reference for Birdman / Black Overcoat."
+    },
+    {
+      "id": "cmtmxffxf000buft000o1gepz",
+      "code": "LOC_OFFICE_LOUNGE_MASTER_V1",
+      "kind": "location",
+      "filePath": "locations/office-lounge/lounge.jpg",
+      "priority": 30,
+      "role": "Canonical location reference for Office Lounge."
+    },
+    {
+      "id": "cmtmyfm3l0001ufvgm34brest",
+      "code": "STYLE_BEARRIDGE_MINIMAL_FLAT_REF_V1",
+      "kind": "style",
+      "filePath": "style/bearridge-minimal-flat/2._ElevatorLight_x0y0.png",
+      "priority": 40,
+      "role": "Canonical visual style guidance. Use for style consistency only, not as source of scene content."
+    },
+    {
+      "id": "cmtmyfofz0003ufvg1d9kabu4",
+      "code": "STYLE_BEARRIDGE_MINIMAL_FLAT_REF_V2",
+      "kind": "style",
+      "filePath": "style/bearridge-minimal-flat/CoffeeGiving_x0y0.png",
+      "priority": 41,
+      "role": "Canonical visual style guidance. Use for style consistency only, not as source of scene content."
+    },
+    {
+      "id": "cmtmyfq040005ufvg6u6pxaci",
+      "code": "STYLE_BEARRIDGE_MINIMAL_FLAT_REF_V3",
+      "kind": "style",
+      "filePath": "style/bearridge-minimal-flat/ViewThroughWindow_x0y471.png",
+      "priority": 42,
+      "role": "Canonical visual style guidance. Use for style consistency only, not as source of scene content."
+    },
+    {
+      "id": "cmtmyfrnm0007ufvgod7viuc2",
+      "code": "STYLE_BEARRIDGE_MINIMAL_FLAT_REF_V4",
+      "kind": "style",
+      "filePath": "style/bearridge-minimal-flat/WayToCabinet_x687y0.png",
+      "priority": 43,
+      "role": "Canonical visual style guidance. Use for style consistency only, not as source of scene content."
+    }
+  ]
+}

@@ -1,0 +1,1 @@
+{"version":3,"file":"FrameWorkspace.d.ts","sourceRoot":"","sources":["../../../src/screens/FrameWorkspace.tsx"],"names":[],"mappings":"AAAA,OAAO,KAAK,MAAM,OAAO,CAAC;AAK1B,OAAO,KAAK,EAAqN,OAAO,EAAoF,MAAM,aAAa,CAAC;AAUhV,wBAAgB,WAAW,CAAC,EAAE,OAAO,EAAE,EAAE;IAAE,OAAO,EAAE,OAAO,CAAA;CAAE,qBA2T5D;AA8CD,wBAAgB,gBAAgB,CAAC,EAAE,OAAO,EAAE,EAAE;IAAE,OAAO,EAAE,OAAO,CAAA;CAAE,qBAyBjE"}

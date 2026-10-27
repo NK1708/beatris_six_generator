@@ -12,12 +12,13 @@ const mocks = vi.hoisted(() => ({
   projectPath: ""
 }));
 
-vi.mock("./services/generationService.js", () => ({ previewFrame: mocks.previewFrame }));
+vi.mock("./services/generationService.js", () => ({ previewFrameContext: mocks.previewFrame }));
 vi.mock("./db.js", () => ({
   projectDbManager: {
-    getActiveProject: () => ({
+    acquireActiveProject: () => ({
       projectPath: mocks.projectPath,
-      prisma: { generation: { create: mocks.generationCreate } }
+      prisma: { generation: { create: mocks.generationCreate } },
+      release: vi.fn()
     })
   }
 }));
@@ -25,7 +26,36 @@ vi.mock("./providers/providerFactory.js", () => ({
   createImageProvider: () => ({ generate: mocks.providerGenerate, edit: mocks.providerEdit })
 }));
 
-import { createChatGPTExport } from "./services/chatGPTExportService.js";
+import { createChatGPTExport, type ChatGPTExportDependencies } from "./services/chatGPTExportService.js";
+
+function exportDependencies(): ChatGPTExportDependencies {
+  return {
+    async prepare(frameId: string) {
+      const preview = await mocks.previewFrame(frameId);
+      const storyState = preview.context.storyState ?? { time: "", characters: {}, environment: {}, props: {}, storyFacts: [] };
+      return {
+        preview,
+        readiness: {
+          status: "READY",
+          frameId,
+          strategy: preview.strategy,
+          targetRevision: 1,
+          targetFingerprint: JSON.stringify(storyState),
+          selectedPredecessorGenerationId: preview.context.previousLockedFrame?.generationId
+        },
+        target: {
+          context: preview.context,
+          targetStoryState: storyState,
+          targetRevision: 1,
+          targetFingerprint: JSON.stringify(storyState),
+          targetProvenance: { origin: "EXPLICIT" },
+          selectedPredecessorGenerationId: preview.context.previousLockedFrame?.generationId
+        },
+        async revalidate() {}
+      };
+    }
+  } as unknown as ChatGPTExportDependencies;
+}
 
 describe("ChatGPT export", () => {
   beforeEach(async () => {
@@ -93,7 +123,7 @@ describe("ChatGPT export", () => {
       }
     });
 
-    const result = await createChatGPTExport("frame-id", new Date("2026-09-22T12:00:00.000Z"));
+    const result = await createChatGPTExport("frame-id", new Date("2026-09-22T12:00:00.000Z"), exportDependencies());
     const entries = unzipSync(result.buffer);
     const promptPath = "S001_F001_CHATGPT/01_CHATGPT_PROMPT.txt";
     const manifestPath = "S001_F001_CHATGPT/manifest.json";
@@ -200,7 +230,7 @@ describe("ChatGPT export", () => {
       }
     });
 
-    const result = await createChatGPTExport("frame-2");
+    const result = await createChatGPTExport("frame-2", new Date(), exportDependencies());
     const entries = unzipSync(result.buffer);
     const names = Object.keys(entries);
     const manifest = result.manifest;
@@ -287,7 +317,7 @@ describe("ChatGPT export", () => {
       }
     });
 
-    await expect(createChatGPTExport("frame-2")).rejects.toMatchObject({ code: "INVALID_CONTINUATION_BASE" });
+    await expect(createChatGPTExport("frame-2", new Date(), exportDependencies())).rejects.toMatchObject({ code: "INVALID_CONTINUATION_BASE" });
     expect(mocks.providerGenerate).not.toHaveBeenCalled();
     expect(mocks.providerEdit).not.toHaveBeenCalled();
   });

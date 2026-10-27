@@ -2,6 +2,7 @@ import fs from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import { PrismaClient } from "@prisma/client";
+import { strFromU8, unzipSync } from "fflate";
 import { ReferenceResolver } from "@bearridge/core";
 import { describe, expect, it } from "vitest";
 import { projectDbManager, sqliteUrl } from "./db.js";
@@ -9,6 +10,7 @@ import { loadFrameContext } from "./services/contextService.js";
 import { createLocationAngle, lockReferenceAsCanonical, setReferenceStatus, uploadReferenceVersion } from "./services/referenceService.js";
 import { importChatGPTResult } from "./services/chatGPTImportService.js";
 import { createChatGPTExport } from "./services/chatGPTExportService.js";
+import { createChatGPTRepairExport } from "./services/chatGPTRepairService.js";
 import { updateFrameContext } from "./services/frameContextService.js";
 import { lockFrameWithSelectedGeneration, selectGenerationForFrame } from "./services/generationReviewService.js";
 
@@ -132,6 +134,8 @@ describe("architectural refactor", () => {
     const styleReferenceColumns = await opened.prisma.$queryRawUnsafe<Array<{ name: string }>>(`PRAGMA table_info("StyleReference")`);
     const sceneCharacterTables = await opened.prisma.$queryRawUnsafe<Array<{ name: string }>>(`SELECT name FROM sqlite_master WHERE type = 'table' AND name = 'SceneCharacter'`);
     const frameCharacterReferenceSelectionTables = await opened.prisma.$queryRawUnsafe<Array<{ name: string }>>(`SELECT name FROM sqlite_master WHERE type = 'table' AND name = 'FrameCharacterReferenceSelection'`);
+    const frameStoryStateTables = await opened.prisma.$queryRawUnsafe<Array<{ name: string }>>(`SELECT name FROM sqlite_master WHERE type = 'table' AND name = 'FrameStoryState'`);
+    const migrationRows = await opened.prisma.$queryRawUnsafe<Array<{ id: string }>>(`SELECT "id" FROM "_BearridgeProjectMigration"`);
 
     expect(frameColumns.map((column) => column.name)).toEqual(expect.arrayContaining(["locationId", "locationAngleId", "styleProfileId", "generationStrategy", "continuityEditContract"]));
     expect(frameCharacterReferenceSelectionTables).toHaveLength(1);
@@ -139,6 +143,11 @@ describe("architectural refactor", () => {
     expect(outfitColumns.map((column) => column.name)).toContain("immutableFeatures");
     expect(styleReferenceColumns.map((column) => column.name)).toContain("updatedAt");
     expect(sceneCharacterTables).toHaveLength(1);
+    expect(frameStoryStateTables).toHaveLength(1);
+    expect(migrationRows).toEqual([
+      { id: "20261021191000_add_frame_story_state" },
+      { id: "20261026120000_add_frame_character_cast" }
+    ]);
   });
 
   it("keeps upload draft, promotes through lifecycle, and versions canonical slots", async () => {
@@ -279,7 +288,8 @@ describe("architectural refactor", () => {
 
     expect(loaded.scene.description).toBe("Mira finds a sealed folder in the archive.");
     expect(loaded.scene.characterIds).toEqual([character.id]);
-    expect(loaded.frame.characterIds).toEqual([character.id]);
+    expect(loaded.frame.characterIds).toEqual([]);
+    expect(loaded.frame.effectiveCharacterIds).toEqual([character.id]);
     expect(loaded.location?.id).toBe(location.id);
     expect(loaded.styleProfile?.id).toBe(style.id);
   });
@@ -339,15 +349,17 @@ describe("architectural refactor", () => {
     await uploadAndLock("style", style.id, "REF", "style-ref.png");
 
     const scene = await prisma.scene.create({ data: { projectId: context.project.id, sequence: 1, name: "Scene", locationId: location.id, styleProfileId: style.id } });
-    await prisma.storyState.create({ data: { sceneId: scene.id, document: JSON.stringify({
+    const storyState = {
       sceneId: scene.id,
       time: { description: "" },
       environment: {},
       characters: { [character.id]: { present: true, outfitId: outfit.id } },
       props: {},
       storyFacts: []
-    }) } });
+    };
+    await prisma.storyState.create({ data: { sceneId: scene.id, document: JSON.stringify(storyState) } });
     const frame = await prisma.frame.create({ data: { sceneId: scene.id, sequence: 3, frameCode: "S001_F003" } });
+    await prisma.frameStoryState.create({ data: { frameId: frame.id, document: JSON.stringify(storyState), originType: "EXPLICIT" } });
 
     await updateFrameContext(prisma, {
       frameId: frame.id,
@@ -536,6 +548,11 @@ describe("architectural refactor", () => {
     const context = await projectDbManager.createProject({ name: "Generation Review", rootPath: projectPath });
     const scene = await context.prisma.scene.create({ data: { projectId: context.project.id, sequence: 1, name: "Scene" } });
     const frame = await context.prisma.frame.create({ data: { sceneId: scene.id, sequence: 1, frameCode: "S001_F001" } });
+    const lockState = { sceneId: scene.id, time: { description: "" }, environment: {}, characters: {}, props: {}, storyFacts: [] };
+    await context.prisma.frameStoryState.create({ data: { frameId: frame.id, document: JSON.stringify(lockState), originType: "EXPLICIT" } });
+    await fs.mkdir(path.join(projectPath, "generations"), { recursive: true });
+    await fs.writeFile(path.join(projectPath, "generations/first.png"), Buffer.from(tinyPng.split(",")[1]!, "base64"));
+    await fs.writeFile(path.join(projectPath, "generations/second.png"), Buffer.from(tinyPng.split(",")[1]!, "base64"));
     const generationData = {
       frameId: frame.id,
       provider: "mock",
@@ -543,7 +560,7 @@ describe("architectural refactor", () => {
       prompt: "prompt",
       resolution: "1536x864",
       aspectRatio: "16:9",
-      storyStateSnapshot: "{}",
+      storyStateSnapshot: JSON.stringify(lockState),
       frameSnapshot: "{}"
     };
     const first = await context.prisma.generation.create({ data: { ...generationData, status: "SUCCESS", outputFilePath: "generations/first.png" } });
@@ -563,7 +580,7 @@ describe("architectural refactor", () => {
     });
     await expect(selectGenerationForFrame(context.prisma, frame.id, failed.id)).rejects.toMatchObject({ code: "INVALID_GENERATION_SELECTION" });
 
-    await lockFrameWithSelectedGeneration(context.prisma, frame.id);
+    await lockFrameWithSelectedGeneration(context.prisma, projectPath, frame.id);
     await expect(context.prisma.frame.findUniqueOrThrow({ where: { id: frame.id } })).resolves.toMatchObject({
       selectedGenerationId: second.id,
       status: "LOCKED"
@@ -574,6 +591,50 @@ describe("architectural refactor", () => {
     });
     const nextContext = await loadFrameContext(next.id);
     expect(nextContext.previousLockedFrame).toMatchObject({ generationId: second.id, outputFilePath: second.outputFilePath });
+  });
+
+  it("exports and imports a repair as another Generation of the same Frame", async () => {
+    const projectPath = await fs.mkdtemp(path.join(os.tmpdir(), "bearridge-repair-"));
+    const context = await projectDbManager.createProject({ name: "Repair Test", rootPath: projectPath });
+    const scene = await context.prisma.scene.create({ data: { projectId: context.project.id, sequence: 1, name: "Scene" } });
+    const storyState = await context.prisma.storyState.create({ data: { sceneId: scene.id, document: "{}" } });
+    const frame = await context.prisma.frame.create({ data: { sceneId: scene.id, sequence: 7, frameCode: "S001_F007", action: "Existing action" } });
+    const imagePath = "generations/S001_F007/original.png";
+    await fs.mkdir(path.join(projectPath, "generations", "S001_F007"), { recursive: true });
+    await fs.writeFile(path.join(projectPath, imagePath), Buffer.from(tinyPng.split(",")[1]!, "base64"));
+    const original = await context.prisma.generation.create({ data: {
+      frameId: frame.id, provider: "chatgpt-manual", model: "manual", prompt: "Original production prompt", status: "SUCCESS",
+      outputFilePath: imagePath, resolution: "1536x864", aspectRatio: "16:9", storyStateSnapshot: "{}", frameSnapshot: "{}"
+    } });
+    await context.prisma.frame.update({ where: { id: frame.id }, data: { status: "LOCKED", selectedGenerationId: original.id } });
+    const contract = { sourceGenerationId: original.id, changes: ["Fix Webster's fingers"], forbidden: ["Do not move the camera"] };
+
+    const exported = await createChatGPTRepairExport(frame.id, contract);
+    const entries = unzipSync(exported.buffer);
+    const root = "S001_F007_REPAIR_CHATGPT";
+    expect(Object.keys(entries)).toEqual(expect.arrayContaining([
+      `${root}/00_README.txt`, `${root}/01_CHATGPT_PROMPT.txt`, `${root}/02_AUTHORITATIVE_BASE_S001_F007.png`,
+      `${root}/manifest.json`, `${root}/receipt.json`
+    ]));
+    expect(Buffer.from(entries[`${root}/02_AUTHORITATIVE_BASE_S001_F007.png`]!)).toEqual(Buffer.from(tinyPng.split(",")[1]!, "base64"));
+    const prompt = strFromU8(entries[`${root}/01_CHATGPT_PROMPT.txt`]!);
+    expect(prompt).toContain("CHANGE ONLY:\n- Fix Webster's fingers");
+    expect(prompt).toContain("FORBIDDEN:\n- Do not move the camera");
+    expect(prompt).not.toContain("Existing action");
+    expect(exported.manifest).toMatchObject({ operation: "REPAIR", repairSource: { generationId: original.id, frameId: frame.id } });
+    expect(await context.prisma.frame.count()).toBe(1);
+
+    const imported = await importChatGPTResult({ frameId: frame.id, exportId: exported.exportId, fileName: "repaired.png", dataUrl: tinyPng });
+    expect(imported).toMatchObject({ status: "SUCCESS", generationType: "REPAIR", parentGenerationId: original.id, frameId: frame.id });
+    expect(imported!.references).toEqual([expect.objectContaining({ referenceKind: "base-repair-generation", referenceId: original.id })]);
+    expect(JSON.parse(imported!.rawMetadata!)).toMatchObject({ operation: "REPAIR", repairContract: contract, exportId: exported.exportId });
+    expect(await context.prisma.generation.findUnique({ where: { id: original.id } })).toMatchObject(original);
+    expect(await context.prisma.frame.findUnique({ where: { id: frame.id } })).toMatchObject({ status: "LOCKED", selectedGenerationId: original.id });
+    expect(await context.prisma.storyState.findUnique({ where: { id: storyState.id } })).toMatchObject(storyState);
+    expect(await context.prisma.frame.count()).toBe(1);
+
+    const otherFrame = await context.prisma.frame.create({ data: { sceneId: scene.id, sequence: 8, frameCode: "S001_F008" } });
+    await expect(createChatGPTRepairExport(otherFrame.id, contract)).rejects.toMatchObject({ code: "INVALID_REPAIR_SOURCE" });
   });
 
   it.each([

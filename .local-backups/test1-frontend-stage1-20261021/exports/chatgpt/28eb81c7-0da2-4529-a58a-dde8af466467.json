@@ -1,0 +1,155 @@
+{
+  "exportId": "28eb81c7-0da2-4529-a58a-dde8af466467",
+  "createdAt": "2026-10-21T08:14:37.250Z",
+  "manifest": {
+    "schemaVersion": 1,
+    "exportId": "28eb81c7-0da2-4529-a58a-dde8af466467",
+    "project": {
+      "id": "cmtmvlm680000ufuswbjrtb8v"
+    },
+    "frame": {
+      "id": "cmupich5t0011uf9w3kq2pvle",
+      "code": "S001_F007"
+    },
+    "strategy": "CONTINUE_PREVIOUS_FRAME",
+    "operation": "REPAIR",
+    "repairContract": {
+      "sourceGenerationId": "cmvhu3u6o0001ufwo1mwcqi52",
+      "changes": [
+        "Correct Webster's malformed hands and overlapping fingers while he is seated on the sofa. Replace the clasped hands with two relaxed, anatomically natural hands resting separately on his thighs, with five correctly formed fingers on each hand. Preserve his seated posture and the position of his arms as much as possible."
+      ],
+      "forbidden": [
+        "Do not change Webster's face, hairstyle, body proportions, Beige Suit, or seated position.",
+        "Do not change Birdman's appearance, pose, position, or clothing.",
+        "Do not change the closed door or the document folder on the coffee table.",
+        "Do not move, resize, remove, or redesign any furniture.",
+        "Do not change the room geometry, camera, framing, perspective, lighting, shadows, colors, or visual style.",
+        "Do not add or remove any characters or objects.",
+        "Do not modify any part of the image outside Webster's hands and the immediately adjacent forearm area."
+      ],
+      "frameId": "cmupich5t0011uf9w3kq2pvle"
+    },
+    "repairSource": {
+      "generationId": "cmvhu3u6o0001ufwo1mwcqi52",
+      "frameId": "cmupich5t0011uf9w3kq2pvle",
+      "filePath": "generations/S001_F007/S001_F007_CHATGPT_G001.png"
+    },
+    "packageType": "CHATGPT_PORTABLE_RENDER",
+    "packageVersion": 1,
+    "uploadMode": "INDIVIDUAL_ATTACHMENTS",
+    "requiresConversationContext": false,
+    "createdAt": "2026-10-21T08:14:37.250Z",
+    "attachments": [
+      {
+        "fileName": "02_AUTHORITATIVE_BASE_S001_F007.png",
+        "role": "AUTHORITATIVE_BASE",
+        "assetId": "cmvhu3u6o0001ufwo1mwcqi52"
+      }
+    ],
+    "geometry": {
+      "targetWidth": 1200,
+      "targetHeight": 675,
+      "targetAspectRatio": 1.777777777777778,
+      "requestAspectRatio": "16:9",
+      "requestResolution": "1536x864",
+      "requiresCrop": false,
+      "cropStrategy": "NONE"
+    }
+  },
+  "fullTargetPrompt": "BEARRIDGE PORTABLE REPAIR REQUEST\n\nMODE: REPAIR_GENERATION\nREQUIRES_CONVERSATION_CONTEXT: FALSE\n\nThe attached file 02_AUTHORITATIVE_BASE_S001_F007.png is the existing image to correct.\nROLE: AUTHORITATIVE_BASE\n\nPerform a localized image edit of the attached image.\n\nCHANGE ONLY:\n- Correct Webster's malformed hands and overlapping fingers while he is seated on the sofa. Replace the clasped hands with two relaxed, anatomically natural hands resting separately on his thighs, with five correctly formed fingers on each hand. Preserve his seated posture and the position of his arms as much as possible.\n\nFORBIDDEN:\n- Do not change Webster's face, hairstyle, body proportions, Beige Suit, or seated position.\n- Do not change Birdman's appearance, pose, position, or clothing.\n- Do not change the closed door or the document folder on the coffee table.\n- Do not move, resize, remove, or redesign any furniture.\n- Do not change the room geometry, camera, framing, perspective, lighting, shadows, colors, or visual style.\n- Do not add or remove any characters or objects.\n- Do not modify any part of the image outside Webster's hands and the immediately adjacent forearm area.\n\nPreserve all unaffected parts of the image.\nDo not create a new scene.\nDo not change the camera or composition.\nDo not redesign characters or environment.\nGenerate one corrected image without explanation.",
+  "frameSnapshot": {
+    "id": "cmupich5t0011uf9w3kq2pvle",
+    "sceneId": "cmtmyy8n20001uf583uas8kju",
+    "sequence": 7,
+    "frameCode": "S001_F007",
+    "type": "CG",
+    "status": "DRAFT",
+    "generationStrategy": "CONTINUE_PREVIOUS_FRAME",
+    "continuityEditContract": {
+      "changes": [
+        "Webster moves from standing near the sofa to sitting naturally upright on the left side of the sofa.",
+        "Birdman moves from beside the coffee maker to standing beside the coffee table, facing generally toward Webster.",
+        "Add one closed dark document folder lying on top of the coffee table.",
+        "Change the office door from open to closed."
+      ],
+      "forbidden": [
+        "Do not change Webster's canonical appearance, hairstyle, body proportions, or Beige Suit.",
+        "Do not change Birdman's canonical appearance, hairstyle, body proportions, Black Overcoat, glasses, or moustache.",
+        "Do not place anything in either character's hands.",
+        "Do not add, remove, or replace characters.",
+        "Do not change the camera position, angle, framing, perspective, or shot size.",
+        "Do not move, resize, remove, replace, or redesign the sofa.",
+        "Do not move, resize, remove, replace, or redesign the coffee table.",
+        "Do not move, resize, remove, replace, or redesign the desk or coffee maker.",
+        "Do not change the room geometry, walls, ceiling, floor, baseboards, or light fixture.",
+        "Do not add any object other than the single closed dark document folder.",
+        "Do not add text, labels, logos, or markings to the document folder.",
+        "Do not change the lighting, shadows, brightness, color palette, or visual style.",
+        "Do not add internal facial features to either character.",
+        "Do not redesign the closed door; preserve the same canonical door and doorway."
+      ],
+      "allowedChanges": [
+        "environment",
+        "character.pose",
+        "character.position",
+        "character.props"
+      ]
+    },
+    "description": "Webster is now seated on the left side of the sofa. Birdman has moved from the coffee maker to the coffee table and placed a closed dark document folder on the table. The office door is now closed.",
+    "action": "Webster has sat down naturally on the left side of the sofa.\n\nBirdman has walked from the coffee maker to the coffee table and now stands beside it, facing generally toward Webster.\n\nBirdman has placed a single closed dark document folder on the coffee table. The folder is no longer in his hands.\n\nThe office door has been closed.\n\nBoth characters are now still and neither character holds any object.",
+    "camera": "Keep exactly the same camera position, angle, framing, perspective, and shot size as S001_F006.",
+    "composition": "Preserve the overall composition and room geometry established in S001_F006.\n\nWebster is now seated naturally on the left side of the existing sofa.\n\nBirdman is now standing beside the existing coffee table, facing generally toward Webster.\n\nPlace one closed dark document folder on top of the coffee table.\n\nThe office door is now closed.\n\nKeep the sofa, coffee table, desk, coffee maker, walls, ceiling, floor, light fixture, and all other existing environmental elements in their established positions.\n\nDo not redesign or replace any existing part of the room.",
+    "lighting": "Keep exactly the same lighting, shadows, brightness, color palette, and level of visual detail as S001_F006.",
+    "expressionNotes": "Webster remains calm and is seated naturally upright on the left side of the sofa. Use a relaxed but composed seated posture.\n\nBirdman remains calm and stands naturally upright beside the coffee table, facing generally toward Webster.\n\nPreserve both characters' canonical body proportions, silhouettes, hairstyles, outfits, and identity.\n\nBoth characters must follow the canonical featureless-face style.\n\nDo not add internal facial features.\n\nPreserve Birdman's canonical rectangular black-framed glasses and thick black moustache.",
+    "continuityNotes": "Continue directly from S001_F006.\n\nWebster moves only from standing near the sofa to sitting on the left side of the same sofa.\n\nBirdman moves only from beside the coffee maker to beside the coffee table.\n\nA single closed dark document folder is now lying on the coffee table.\n\nThe previously open office door is now closed.\n\nThe camera does not move.\n\nThe existing furniture and room architecture do not move or change design.\n\nPreserve everything else from the previous frame.",
+    "previousFrameId": "cmupi43zt000euf9ws0r6t2r6",
+    "selectedGenerationId": null,
+    "characterIds": [
+      "cmtmwdlnl0002ufusmp4f4of6",
+      "cmuic0fe9000pufd4aoe7211e"
+    ],
+    "additionalCharacterReferenceIds": {
+      "cmtmwdlnl0002ufusmp4f4of6": [],
+      "cmuic0fe9000pufd4aoe7211e": []
+    },
+    "locationId": "cmtmxe6xa0009uft0chtr5dpv",
+    "locationAngleId": "cmtmxfptr000duft0o6mdwqe0",
+    "styleProfileId": "cmtmxymmk0003ufds9loziorw",
+    "targetWidth": 1200,
+    "targetHeight": 675,
+    "targetAspectRatio": 1.777777777777778
+  },
+  "storyStateSnapshot": {
+    "sceneId": "cmtmyy8n20001uf583uas8kju",
+    "time": {
+      "description": "Late afternoon"
+    },
+    "environment": {
+      "door": "closed",
+      "dark document folder": "lying closed on the coffee table"
+    },
+    "characters": {
+      "cmtmwdlnl0002ufusmp4f4of6": {
+        "present": true,
+        "outfitId": "cmtmwpes40003uftkx1f077j3",
+        "emotion": "calm",
+        "pose": "natural upright standing posture",
+        "hairState": "neatly styled, unchanged from canonical reference",
+        "locationPosition": "standing beside the coffee table"
+      },
+      "cmuic0fe9000pufd4aoe7211e": {
+        "present": true,
+        "outfitId": "cmuic4un8000tufd47sthdi4n",
+        "emotion": "calm",
+        "pose": "seated naturally upright on the left side of the sofa",
+        "hairState": "canonical hairstyle, unchanged",
+        "locationPosition": "seated on the left side of the sofa"
+      }
+    },
+    "props": {},
+    "storyFacts": [
+      "Birdman is waiting for someone to arrive."
+    ]
+  },
+  "supportingReferences": []
+}

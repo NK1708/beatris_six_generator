@@ -1,4 +1,4 @@
-import type { AssetStatus, ContinuityEditContract, FrameGenerationStrategy, FrameStatus, FrameType, ReferenceAsset, StoryStateDocument } from "@bearridge/shared";
+import type { AssetStatus, ContinuityBaseline, ContinuityEditContract, FrameCharacterCastSource, FrameGenerationStrategy, FrameStatus, FrameStoryStateProvenance, FrameType, ReferenceAsset, StoryStateDocument } from "@bearridge/shared";
 
 export interface ProjectView {
   id: string;
@@ -162,6 +162,9 @@ export interface FrameView {
   previousFrameId: string | null;
   selectedGenerationId: string | null;
   characterIds: string[];
+  effectiveCharacterIds?: string[];
+  characterCastSource?: FrameCharacterCastSource;
+  characterCastRevision?: number;
   additionalCharacterReferenceIds?: Record<string, string[]>;
   locationId: string | null;
   locationAngleId: string | null;
@@ -175,8 +178,23 @@ export interface FrameContext {
   project: ProjectView;
   scene: SceneView;
   frame: FrameView;
+  sceneCurrentStoryState: StoryStateDocument;
+  frameTargetStoryState:
+    | {
+        status: "AVAILABLE";
+        document: StoryStateDocument;
+        revision: number;
+        provenance: FrameStoryStateProvenance;
+        explicitlyEditedAt: Date | null;
+      }
+    | { status: "MISSING"; frameId: string; legacy: true }
+    | { status: "INVALID"; frameId: string; code: "TARGET_INVALID"; message: string };
+  continuityBaseline: ContinuityBaseline;
+  previousLockedStoryState?: StoryStateDocument | undefined;
+  // Temporary compatibility fields remain authoritative for generation until a later integration stage.
   storyState: StoryStateDocument;
   previousStoryState?: StoryStateDocument | undefined;
+  previousFrameCharacterIds?: string[] | undefined;
   characters: CharacterView[];
   location: LocationView | null;
   locationAngle: LocationView["angles"][number] | null;

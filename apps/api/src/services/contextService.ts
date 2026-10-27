@@ -1,9 +1,10 @@
-import type { Prisma } from "@prisma/client";
-import { continuityEditContractSchema, type AssetStatus, type FrameStatus, type FrameType } from "@bearridge/shared";
+import type { Prisma, PrismaClient } from "@prisma/client";
+import { continuityEditContractSchema, type AssetStatus, type FrameStatus, type FrameType, type VisualBaseDescriptor } from "@bearridge/shared";
 import { type FrameContext, type FrameView, type ProjectView } from "@bearridge/core";
-import { createEmptyStoryState, parseStoryState } from "@bearridge/core";
+import { createEmptyStoryState, parseStoryState, resolveContinuityBaseline, resolveEffectiveFrameCast, type StoryStateGenerationCandidate } from "@bearridge/core";
 import { NotFoundError } from "../errors.js";
-import { projectDbManager } from "../db.js";
+import { projectDbManager, type ProjectContext } from "../db.js";
+import { FrameStoryStateService, FrameStoryStateServiceError } from "./frameStoryStateService.js";
 
 const projectInclude = {
   characters: {
@@ -43,8 +44,12 @@ export async function loadProject(id: string) {
   return project;
 }
 
-export async function loadFrameContext(frameId: string): Promise<FrameContext> {
-  const { prisma } = projectDbManager.getActiveProject();
+export async function loadFrameContext(frameId: string, projectContext: ProjectContext = projectDbManager.getActiveProject()): Promise<FrameContext> {
+  const { prisma } = projectContext;
+  return loadFrameContextFromPrisma(prisma, frameId);
+}
+
+export async function loadFrameContextFromPrisma(prisma: PrismaClient, frameId: string): Promise<FrameContext> {
   const frame = await prisma.frame.findUnique({
     where: { id: frameId },
     include: {
@@ -93,13 +98,45 @@ export async function loadFrameContext(frameId: string): Promise<FrameContext> {
   ]));
   const sceneCharacterIds = scene.characters.sort((left, right) => left.order - right.order).map((item) => item.characterId);
   const selectedLocationAngle = frame.locationAngle;
-  const previousLockedFrame = frame.previousFrameId
-    ? await prisma.frame.findFirst({
-        where: { id: frame.previousFrameId, status: "LOCKED" },
-        include: { generations: true }
+  const predecessorFrame = frame.previousFrameId
+    ? await prisma.frame.findUnique({
+        where: { id: frame.previousFrameId },
+        include: { generations: true, characters: { orderBy: { order: "asc" } } }
       })
     : null;
+  const previousLockedFrame = predecessorFrame?.status === "LOCKED" ? predecessorFrame : null;
   const selectedPreviousGeneration = previousLockedFrame?.generations.find((generation) => generation.id === previousLockedFrame.selectedGenerationId);
+  const sceneCurrentStoryState = scene.storyState
+    ? parseStoryState(JSON.parse(scene.storyState.document) as unknown)
+    : createEmptyStoryState(scene.id);
+  const cast = resolveEffectiveFrameCast({
+    source: frame.characterCastSource,
+    characterIds: frameCharacterIds,
+    sceneCharacterIds,
+    storyStatePresentCharacterIds: Object.entries(sceneCurrentStoryState.characters)
+      .filter(([, state]) => state.present)
+      .map(([characterId]) => characterId)
+  });
+  const previousCast = predecessorFrame ? resolveEffectiveFrameCast({
+    source: predecessorFrame.characterCastSource,
+    characterIds: predecessorFrame.characters.map((item) => item.characterId),
+    sceneCharacterIds,
+    storyStatePresentCharacterIds: Object.entries(sceneCurrentStoryState.characters).filter(([, state]) => state.present).map(([id]) => id)
+  }) : undefined;
+  const frameTargetStoryState = await readFrameTargetStoryState(prisma, frame.id);
+  const baselineGeneration = predecessorFrame?.generations.find((generation) => generation.id === predecessorFrame.selectedGenerationId);
+  const continuityBaseline = resolveFrameContextContinuityBaseline(
+    predecessorFrame ? {
+      id: predecessorFrame.id,
+      status: predecessorFrame.status,
+      selectedGenerationId: predecessorFrame.selectedGenerationId,
+      generations: predecessorFrame.generations
+    } : undefined,
+    baselineGeneration?.outputFilePath ? {
+      generationId: baselineGeneration.id,
+      filePath: baselineGeneration.outputFilePath
+    } : undefined
+  );
 
   return {
     project: mapProject(scene.project),
@@ -131,7 +168,10 @@ export async function loadFrameContext(frameId: string): Promise<FrameContext> {
       continuityNotes: frame.continuityNotes,
       previousFrameId: frame.previousFrameId,
       selectedGenerationId: frame.selectedGenerationId,
-      characterIds: frameCharacterIds.length ? frameCharacterIds : sceneCharacterIds,
+      characterIds: cast.characterIds,
+      effectiveCharacterIds: cast.effectiveCharacterIds,
+      characterCastSource: cast.source,
+      characterCastRevision: frame.characterCastRevision,
       additionalCharacterReferenceIds,
       locationId: selectedLocation?.id ?? null,
       locationAngleId: selectedLocationAngle?.id ?? null,
@@ -140,8 +180,13 @@ export async function loadFrameContext(frameId: string): Promise<FrameContext> {
       targetHeight: frame.targetHeight,
       targetAspectRatio: frame.targetAspectRatio
     },
-    storyState: scene.storyState ? parseStoryState(JSON.parse(scene.storyState.document) as unknown) : createEmptyStoryState(scene.id),
+    sceneCurrentStoryState,
+    frameTargetStoryState,
+    continuityBaseline,
+    ...(continuityBaseline.status === "AVAILABLE" ? { previousLockedStoryState: continuityBaseline.storyState } : {}),
+    storyState: sceneCurrentStoryState,
     previousStoryState: parsePreviousStoryState(selectedPreviousGeneration?.storyStateSnapshot),
+    previousFrameCharacterIds: previousCast?.effectiveCharacterIds,
     characters: characters.map((character) => ({
       id: character.id,
       name: character.name,
@@ -263,6 +308,43 @@ export async function loadFrameContext(frameId: string): Promise<FrameContext> {
       outputFilePath: selectedPreviousGeneration.outputFilePath
     } : undefined
   };
+}
+
+export function resolveFrameContextContinuityBaseline(
+  predecessor?: {
+    id: string;
+    status: string;
+    selectedGenerationId?: string | null;
+    generations: StoryStateGenerationCandidate[];
+  },
+  visualBase?: VisualBaseDescriptor
+) {
+  return resolveContinuityBaseline({
+    ...(predecessor ? { predecessor } : {}),
+    ...(visualBase ? { visualBase } : {})
+  });
+}
+
+async function readFrameTargetStoryState(
+  prisma: PrismaClient,
+  frameId: string
+): Promise<FrameContext["frameTargetStoryState"]> {
+  try {
+    const result = await new FrameStoryStateService(prisma).getFrameTargetStoryState(frameId);
+    if (result.status === "MISSING") return result;
+    return {
+      status: "AVAILABLE",
+      document: result.document,
+      revision: result.revision,
+      provenance: result.provenance,
+      explicitlyEditedAt: result.explicitlyEditedAt
+    };
+  } catch (error) {
+    if (error instanceof FrameStoryStateServiceError && error.code === "TARGET_INVALID") {
+      return { status: "INVALID", frameId, code: "TARGET_INVALID", message: error.message };
+    }
+    throw error;
+  }
 }
 
 function parseContinuityEditContract(value: string) {

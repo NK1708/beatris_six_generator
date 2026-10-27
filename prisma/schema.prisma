@@ -69,7 +69,7 @@ model CharacterReference {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
-  character Character @relation(fields: [characterId], references: [id], onDelete: Cascade)
+  character       Character                          @relation(fields: [characterId], references: [id], onDelete: Cascade)
   frameSelections FrameCharacterReferenceSelection[]
 
   @@unique([characterId, code])
@@ -268,41 +268,59 @@ model StoryState {
 }
 
 model Frame {
-  id                   String   @id @default(cuid())
-  sceneId              String
-  sequence             Int
-  frameCode            String   @unique
-  type                 String   @default("CG")
-  status               String   @default("DRAFT")
-  generationStrategy   String   @default("NEW_COMPOSITION")
-  continuityEditContract String @default("{\"changes\":[],\"forbidden\":[],\"allowedChanges\":[]}")
-  description          String   @default("")
-  action               String   @default("")
-  camera               String   @default("")
-  composition          String   @default("")
-  lighting             String   @default("")
-  expressionNotes      String   @default("")
-  continuityNotes      String   @default("")
-  previousFrameId      String?
-  selectedGenerationId String?
-  locationId           String?
-  locationAngleId      String?
-  styleProfileId       String?
-  targetWidth          Int?
-  targetHeight         Int?
-  targetAspectRatio    Float?
-  createdAt            DateTime @default(now())
-  updatedAt            DateTime @updatedAt
+  id                     String   @id @default(cuid())
+  sceneId                String
+  sequence               Int
+  frameCode              String   @unique
+  type                   String   @default("CG")
+  status                 String   @default("DRAFT")
+  generationStrategy     String   @default("NEW_COMPOSITION")
+  continuityEditContract String   @default("{\"changes\":[],\"forbidden\":[],\"allowedChanges\":[]}")
+  description            String   @default("")
+  action                 String   @default("")
+  camera                 String   @default("")
+  composition            String   @default("")
+  lighting               String   @default("")
+  expressionNotes        String   @default("")
+  continuityNotes        String   @default("")
+  previousFrameId        String?
+  selectedGenerationId   String?
+  characterCastSource    String?
+  characterCastRevision  Int      @default(0)
+  locationId             String?
+  locationAngleId        String?
+  styleProfileId         String?
+  targetWidth            Int?
+  targetHeight           Int?
+  targetAspectRatio      Float?
+  createdAt              DateTime @default(now())
+  updatedAt              DateTime @updatedAt
 
-  scene         Scene            @relation(fields: [sceneId], references: [id], onDelete: Cascade)
-  location      Location?        @relation(fields: [locationId], references: [id], onDelete: SetNull)
-  locationAngle LocationAngle?   @relation(fields: [locationAngleId], references: [id], onDelete: SetNull)
-  styleProfile  StyleProfile?    @relation(fields: [styleProfileId], references: [id], onDelete: SetNull)
-  characters    FrameCharacter[]
-  generations   Generation[]
-  panels        Panel[]
+  scene            Scene            @relation(fields: [sceneId], references: [id], onDelete: Cascade)
+  location         Location?        @relation(fields: [locationId], references: [id], onDelete: SetNull)
+  locationAngle    LocationAngle?   @relation(fields: [locationAngleId], references: [id], onDelete: SetNull)
+  styleProfile     StyleProfile?    @relation(fields: [styleProfileId], references: [id], onDelete: SetNull)
+  characters       FrameCharacter[]
+  generations      Generation[]
+  panels           Panel[]
+  targetStoryState FrameStoryState?
 
   @@unique([sceneId, sequence])
+}
+
+model FrameStoryState {
+  id                 String    @id @default(cuid())
+  frameId            String    @unique
+  document           String
+  originType         String
+  sourceFrameId      String?
+  sourceGenerationId String?
+  revision           Int       @default(1)
+  explicitlyEditedAt DateTime?
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
+
+  frame Frame @relation(fields: [frameId], references: [id], onDelete: Cascade)
 }
 
 model FrameCharacter {
@@ -311,8 +329,8 @@ model FrameCharacter {
   characterId String
   order       Int    @default(1)
 
-  frame     Frame     @relation(fields: [frameId], references: [id], onDelete: Cascade)
-  character Character @relation(fields: [characterId], references: [id], onDelete: Cascade)
+  frame                Frame                              @relation(fields: [frameId], references: [id], onDelete: Cascade)
+  character            Character                          @relation(fields: [characterId], references: [id], onDelete: Cascade)
   additionalReferences FrameCharacterReferenceSelection[]
 
   @@unique([frameId, characterId])
@@ -360,27 +378,27 @@ model Screen {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  scene     Scene    @relation(fields: [sceneId], references: [id], onDelete: Cascade)
-  panels    Panel[]
+  scene  Scene   @relation(fields: [sceneId], references: [id], onDelete: Cascade)
+  panels Panel[]
 
   @@unique([sceneId, sequence])
 }
 
 model Panel {
-  id       String @id @default(cuid())
-  screenId String
-  frameId  String
-  sequence Int
-  x        Int?
-  y        Int?
-  width    Int
-  height   Int
-  zIndex   Int?
+  id        String   @id @default(cuid())
+  screenId  String
+  frameId   String
+  sequence  Int
+  x         Int?
+  y         Int?
+  width     Int
+  height    Int
+  zIndex    Int?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  screen   Screen @relation(fields: [screenId], references: [id], onDelete: Cascade)
-  frame    Frame  @relation(fields: [frameId], references: [id], onDelete: Cascade)
+  screen Screen @relation(fields: [screenId], references: [id], onDelete: Cascade)
+  frame  Frame  @relation(fields: [frameId], references: [id], onDelete: Cascade)
 
   @@unique([screenId, sequence])
 }
@@ -399,8 +417,8 @@ model Generation {
   targetWidth        Int?
   targetHeight       Int?
   targetAspectRatio  Float?
-  requiresCrop       Boolean @default(false)
-  cropStrategy       String  @default("NONE")
+  requiresCrop       Boolean   @default(false)
+  cropStrategy       String    @default("NONE")
   parentGenerationId String?
   generationType     String    @default("INITIAL")
   rawMetadata        String?

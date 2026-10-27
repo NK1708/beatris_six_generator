@@ -1,0 +1,38 @@
+{
+  "source": "ChatGPT manual import",
+  "manualImport": true,
+  "exportId": "8ef7ed4f-243c-4a3c-956b-265e2de96dc5",
+  "exportSchemaVersion": 1,
+  "importTimestamp": "2026-09-25T13:15:33.724Z",
+  "originalFileName": "a31e4b9f-19f5-4762-a20a-237f7f7a8f79.png",
+  "inputMimeType": "image/png",
+  "strategy": "CONTINUE_PREVIOUS_FRAME",
+  "baseFrameId": "cmtmz8m7v0001ufiw3s6zt7qm",
+  "baseGenerationId": "cmucm3zns0001ufx4mo2d2f82",
+  "supportingReferenceIds": [
+    "cmtmzcdg40005ufiwarkas4ak",
+    "cmtmwoise0001uftk3u04k2yo",
+    "cmtmzd9840007ufiwxmac4rvj",
+    "cmtmxffxf000buft000o1gepz",
+    "cmtmxv7rp0001ufdsay0l989c",
+    "cmtmyfm3l0001ufvgm34brest",
+    "cmtmyfofz0003ufvg1d9kabu4",
+    "cmtmyfq040005ufvg6u6pxaci",
+    "cmtmyfrnm0007ufvgod7viuc2"
+  ],
+  "continuityEditContract": {
+    "changes": [
+      "Birdman moves from the sofa to beside the coffee maker",
+      "Birdman changes from seated to standing",
+      "The sofa becomes empty"
+    ],
+    "forbidden": [
+      "Birdman must hold no objects",
+      "Birdman must not touch the coffee maker",
+      "Birdman's hands must remain outside his pockets",
+      "Do not add any new props"
+    ],
+    "allowedChanges": []
+  },
+  "provenanceNote": "References describe the Bearridge export package inputs; they are not ChatGPT renderer telemetry."
+}

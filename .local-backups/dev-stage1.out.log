@@ -1,0 +1,4 @@
+
+> bearridge-ai-generator@0.1.0 dev
+> concurrently -k -n api,web -c cyan,magenta "npm:dev -w apps/api" "npm:dev -w apps/web"
+

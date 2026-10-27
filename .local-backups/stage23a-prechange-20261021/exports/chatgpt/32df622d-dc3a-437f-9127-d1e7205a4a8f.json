@@ -1,0 +1,326 @@
+{
+  "exportId": "32df622d-dc3a-437f-9127-d1e7205a4a8f",
+  "createdAt": "2026-09-26T12:13:02.217Z",
+  "renderProtocol": {
+    "version": 1,
+    "promptPolicy": "verbatim",
+    "basePolicy": "authoritative",
+    "referencePolicy": "identity-only",
+    "allowPromptRewrite": false,
+    "allowSceneReinterpretation": false
+  },
+  "manifest": {
+    "schemaVersion": 1,
+    "exportId": "32df622d-dc3a-437f-9127-d1e7205a4a8f",
+    "project": {
+      "id": "cmtmvlm680000ufuswbjrtb8v",
+      "name": "test1"
+    },
+    "frame": {
+      "id": "cmuic7t7n000xufd4a1zbnxmj",
+      "code": "S001_F005"
+    },
+    "exportType": "CHATGPT_IMAGE_PACKAGE",
+    "consumer": "chatgpt-manual",
+    "requestedAction": "render",
+    "renderProtocol": {
+      "version": 1,
+      "promptPolicy": "verbatim",
+      "basePolicy": "authoritative",
+      "referencePolicy": "identity-only",
+      "allowPromptRewrite": false,
+      "allowSceneReinterpretation": false
+    },
+    "createdAt": "2026-09-26T12:13:02.217Z",
+    "strategy": "CONTINUE_PREVIOUS_FRAME",
+    "exportPolicy": "CHATGPT_CONTINUATION_V2",
+    "productionReferenceIds": [
+      "cmtmzcdg40005ufiwarkas4ak",
+      "cmuic3rfw000rufd4qhc9swvk",
+      "cmtmzd9840007ufiwxmac4rvj",
+      "cmuic61lb000vufd4lncpg4d9",
+      "cmtmxffxf000buft000o1gepz",
+      "cmtmxv7rp0001ufdsay0l989c",
+      "cmtmyfm3l0001ufvgm34brest",
+      "cmtmyfofz0003ufvg1d9kabu4",
+      "cmtmyfq040005ufvg6u6pxaci",
+      "cmtmyfrnm0007ufvgod7viuc2"
+    ],
+    "visualReferencesActuallyExported": [
+      "cmtmzcdg40005ufiwarkas4ak",
+      "cmuic3rfw000rufd4qhc9swvk"
+    ],
+    "canonicalConstraints": {
+      "characters": [
+        {
+          "id": "cmtmwdlnl0002ufusmp4f4of6",
+          "name": "Birdman",
+          "description": "Adult man with light skin and a tall, broad-shouldered build. Short black hair, neatly styled with a slight side part. Thick black mustache. Rectangular black-framed glasses. Long, slightly angular face with a prominent nose and a strong jawline. Calm, serious appearance. Clean, minimalist graphic character design with simplified facial features and proportions.",
+          "body": "Tall, broad-shouldered adult male with a solid build. Straight posture, moderately long legs, broad upper torso, and natural adult male proportions.",
+          "face": "The facial surface is completely featureless.\nNo eyes, eyebrows, nose, nostrils, mouth, lips or internal facial-feature contours.\n\nPreserve Birdman's canonical black rectangular glasses and thick black moustache as external identity features. These are intentional canonical features and must remain visible.",
+          "hair": "Short black hair, neatly styled with a slight side part. Smooth, controlled silhouette with a small outward flick near the side/back.",
+          "immutableFeatures": "Light skin. Short black side-parted hair. Thick black mustache. Rectangular black-framed glasses. Long slightly angular face. Prominent nose. Strong jawline. Tall broad-shouldered build.",
+          "outfit": {
+            "name": "Black Overcoat",
+            "description": "Formal monochrome black outfit consisting of a long black overcoat with wide lapels, a fitted black turtleneck, straight black trousers, and polished black dress shoes. The silhouette is clean, structured, and understated, with no visible bright accents or decorative patterns.",
+            "immutableFeatures": "Long black overcoat with wide lapels; black turtleneck; straight black trousers; black dress shoes; monochrome black color palette; no visible logos, patterns, bright colors, or decorative accessories."
+          }
+        },
+        {
+          "id": "cmuic0fe9000pufd4aoe7211e",
+          "name": "Webster",
+          "description": "Adult male with light skin and a slim-to-average build.\nElegant, restrained and composed appearance.\nWebster has a clean minimalist graphic character design with a completely featureless facial surface.\nHis identity is defined primarily by his head silhouette, hairstyle, body proportions and clothing rather than internal facial features.",
+          "body": "Slim-to-average adult male build.\nMedium-tall appearance with balanced body proportions.\nRelatively narrow shoulders compared with Birdman.\nLean torso with straight posture.\nLong, proportionate arms and legs.\nNatural, understated stance.\nPreserve the canonical body proportions and silhouette across all views and poses.\nDo not make him broad, muscular, bulky or heavy-set.",
+          "face": "Long, balanced head and face silhouette with a clean jawline.\n\nThe facial surface is completely featureless.\n\nDo not draw eyes, eyeballs, pupils, irises, eye whites, eyelashes, eyebrows or eye shapes.\nDo not draw a nose, nostrils, mouth or lips.\nDo not draw internal lines, marks, shadows or contours that suggest facial features.\n\nThe face must remain a clean uninterrupted skin-colored surface.\n\nPreserve only the outer silhouette and three-dimensional shape of the head and face.\n\nWebster has no glasses, moustache, beard or other facial accessories.",
+          "hair": "Dark charcoal-black hair.\nMedium length.\nNaturally swept back from the forehead.\nSlightly wavy and loosely structured silhouette.\nModerate volume on top and around the back of the head.\nA few simplified outward strands may define the outer silhouette.\n\nPreserve the canonical hairstyle, length, volume and swept-back silhouette.\nDo not make the hair short, straight, tightly styled or significantly longer.\nHair should remain a simplified solid graphic shape with minimal internal detail.",
+          "immutableFeatures": "- Preserve Webster's canonical head and face silhouette.\n- Preserve his medium-length dark swept-back wavy hairstyle.\n- Preserve his slim-to-average build and canonical body proportions.\n- Preserve his relatively narrow shoulder width.\n- Keep the facial surface completely featureless.\n- Never add eyes, pupils, irises, eye whites, eyelashes, eyebrows or eye shapes.\n- Never add a nose or nostrils.\n- Never add a mouth or lips.\n- Never add internal facial-feature lines or contours.\n- Never add glasses, facial hair or facial accessories unless explicitly introduced by a future canonical state.\n- Do not make Webster resemble Birdman.",
+          "outfit": {
+            "name": "Beige Suit",
+            "description": "Formal light beige two-piece suit with a clean, elegant and understated appearance.\n\nSingle-breasted light beige suit jacket with classic lapels and a structured but not oversized fit.\nMatching light beige straight-cut suit trousers.\nWhite dress shirt worn with the collar open.\nNo tie.\nSimple black leather belt with a rectangular silver-colored buckle.\nBlack formal leather dress shoes.\n\nThe outfit uses clean simplified geometric shapes consistent with the canonical visual style.\nFabric is represented with flat color areas and only a small number of simplified folds.\nNo visible fabric texture, patterns, logos or decorative elements.",
+            "immutableFeatures": "- Light beige single-breasted suit jacket\n- Matching light beige suit trousers\n- White dress shirt\n- Open shirt collar\n- No tie\n- Black leather belt\n- Simple rectangular silver-colored belt buckle\n- Black formal dress shoes\n- Jacket and trousers must remain the same beige color family\n- Clean formal silhouette\n- No logos\n- No patterns\n- No decorative accessories\n- No bright accent colors\n- Preserve the canonical cut, proportions and overall silhouette of the suit"
+          }
+        }
+      ],
+      "location": {
+        "name": "Office Lounge",
+        "architecture": "Rectangular enclosed room with flat blue walls, a blue-gray floor, white baseboards, and a flat ceiling. White single door on the left wall. Large brown sofa positioned along the left side; low rectangular wooden coffee table in the foreground; light-colored rectangular desk positioned toward the rear-right wall. The relative positions and proportions of these architectural and furniture elements should remain consistent between views.",
+        "immutableFeatures": ""
+      },
+      "style": {
+        "name": "Bearridge Minimal Flat",
+        "description": "Minimalist 2D flat illustration style with simplified geometric forms and a restrained, muted color palette. Characters, objects and environments are constructed from large clean color shapes with very limited internal detail. No visible decorative outlines, no realistic textures, no gradients and no photorealistic rendering. Human anatomy and facial features are intentionally simplified while preserving clear silhouettes and recognizable proportions. Clothing is represented with broad flat shapes and only a few simplified folds. Environments use simplified geometry and reduced architectural detail. The overall image should feel graphic, clean, restrained and cinematic.",
+        "linework": "Shape-driven illustration with little to no visible contour linework. Forms should be defined primarily by adjacent flat color areas and silhouettes rather than outlines. Avoid thin decorative lines, sketch lines, comic-style ink outlines and excessive internal line detail.",
+        "anatomy": "Simplified but believable human anatomy with natural adult proportions. Bodies should remain clearly readable through strong silhouettes and large geometric shapes. Reduce anatomical detail while preserving correct limb placement, posture and overall proportions. Avoid exaggerated cartoon anatomy and photorealistic anatomical detail.",
+        "faces": "All human characters have completely featureless facial surfaces.\n\nThe face must contain no internal facial features:\n- no eyes, eyeballs, pupils, irises, eye whites, eyelashes or eye shapes;\n- no eyebrows;\n- no nose or nostrils;\n- no mouth or lips;\n- no internal lines, marks, contours or shading that suggest facial features.\n\nThe facial surface should remain a clean, uninterrupted skin-colored shape.\n\nPreserve the canonical outer silhouette and three-dimensional shape of the head, jaw and face.\n\nCanonical external identity features are allowed only when explicitly defined for a character. These may include glasses, moustaches, beards or other canonical accessories/features.\n\nExternal identity features must not cause missing facial features to be reconstructed.\n\nFor example, glasses must not cause eyes to appear behind the lenses, and a moustache must not cause a mouth or lips to appear beneath it.\n\nCharacter identity should be communicated through head silhouette, hairstyle, canonical facial hair or accessories, body proportions, clothing, pose and body language rather than internal facial features.",
+        "shading": "Minimal flat shading. Use a small number of large, hard-edged shadow shapes rather than smooth tonal transitions. Shadows may simplify or merge details into broad dark areas. No gradients, soft airbrushed shading, ambient occlusion, complex reflections or realistic material rendering.",
+        "negativeRules": "No photorealism. No 3D-rendered appearance. No realistic textures. No gradients. No glossy materials. No painterly brushwork. No sketch lines. No detailed comic-book outlines. No visible eyes, eyeballs, pupils, irises, eye whites, eyelashes, or realistic eye details. No detailed facial rendering. No detailed fabric texture. No complex reflections. No bloom. No volumetric lighting. No photographic depth of field. No excessive small details. Do not introduce visual detail absent from the established minimalist flat style.\nNever generate internal facial features on human characters.\n\nNo eyes, pupils, irises, eye whites, eyelashes, eyebrows, noses, nostrils, mouths or lips.\n\nNo subtle facial-feature lines or shading that imply missing facial features.\n\nDo not reconstruct eyes behind canonical glasses.\nDo not reconstruct a mouth beneath canonical facial hair.\n\nDo not add facial features for emotional expression.\nExpress emotion through pose, head orientation, body language and other style-appropriate non-facial cues."
+      }
+    },
+    "continuityEditContract": {
+      "changes": [
+        "Webster appears standing in the open doorway."
+      ],
+      "forbidden": [
+        "Do not move Birdman.",
+        "Do not change Birdman's pose or head direction.",
+        "Do not change the position or opening angle of the door.",
+        "Do not place anything in either character's hands.",
+        "Do not add any character other than Webster.",
+        "Do not change the camera or framing.",
+        "Do not move or redesign any existing furniture.",
+        "Do not change the room geometry.",
+        "Do not change the lighting, brightness, palette, or visual style.",
+        "Do not add internal facial features to either character.",
+        "Do not add any new props."
+      ],
+      "allowedChanges": []
+    },
+    "base": {
+      "frameId": "cmuibjou50001ufd44e45ywbz",
+      "generationId": "cmuibrx2a000dufd4skffywq6",
+      "frameCode": "S001_F004",
+      "filename": "base/previous-frame_S001_F004.png"
+    },
+    "geometry": {
+      "targetWidth": 1200,
+      "targetHeight": 675,
+      "targetAspectRatio": 1.7777777777777777,
+      "requestAspectRatio": "16:9",
+      "requestResolution": "1536x864",
+      "requiresCrop": false,
+      "cropStrategy": "NONE"
+    },
+    "references": [
+      {
+        "order": 1,
+        "filename": "references/01_CHARACTER_BIRDMAN_MASTER_V1.jpg",
+        "id": "cmtmzcdg40005ufiwarkas4ak",
+        "code": "CHAR_BIRDMAN_MASTER_V1",
+        "kind": "character",
+        "label": "Character: Birdman / MASTER V1",
+        "role": "Canonical identity reference for Birdman.",
+        "priority": 10
+      },
+      {
+        "order": 2,
+        "filename": "references/02_CHARACTER_WEBSTER_MASTER_V1.jpg",
+        "id": "cmuic3rfw000rufd4qhc9swvk",
+        "code": "CHAR_WEBSTER_MASTER_V1",
+        "kind": "character",
+        "label": "Character: Webster / MASTER V1",
+        "role": "Canonical identity reference for Webster.",
+        "priority": 10
+      }
+    ]
+  },
+  "fullTargetPrompt": "PROJECT:\ntest1\n\nFRAME:\nS001_F005\n\nTYPE:\nCG\n\nCANONICAL ASSETS:\nCharacter: Birdman\nDescription: Adult man with light skin and a tall, broad-shouldered build. Short black hair, neatly styled with a slight side part. Thick black mustache. Rectangular black-framed glasses. Long, slightly angular face with a prominent nose and a strong jawline. Calm, serious appearance. Clean, minimalist graphic character design with simplified facial features and proportions.\nBody: Tall, broad-shouldered adult male with a solid build. Straight posture, moderately long legs, broad upper torso, and natural adult male proportions.\nFace: The facial surface is completely featureless.\nNo eyes, eyebrows, nose, nostrils, mouth, lips or internal facial-feature contours.\n\nPreserve Birdman's canonical black rectangular glasses and thick black moustache as external identity features. These are intentional canonical features and must remain visible.\nHair canon: Short black hair, neatly styled with a slight side part. Smooth, controlled silhouette with a small outward flick near the side/back.\nImmutable character features: Light skin. Short black side-parted hair. Thick black mustache. Rectangular black-framed glasses. Long slightly angular face. Prominent nose. Strong jawline. Tall broad-shouldered build.\n\nCharacter: Webster\nDescription: Adult male with light skin and a slim-to-average build.\nElegant, restrained and composed appearance.\nWebster has a clean minimalist graphic character design with a completely featureless facial surface.\nHis identity is defined primarily by his head silhouette, hairstyle, body proportions and clothing rather than internal facial features.\nBody: Slim-to-average adult male build.\nMedium-tall appearance with balanced body proportions.\nRelatively narrow shoulders compared with Birdman.\nLean torso with straight posture.\nLong, proportionate arms and legs.\nNatural, understated stance.\nPreserve the canonical body proportions and silhouette across all views and poses.\nDo not make him broad, muscular, bulky or heavy-set.\nFace: Long, balanced head and face silhouette with a clean jawline.\n\nThe facial surface is completely featureless.\n\nDo not draw eyes, eyeballs, pupils, irises, eye whites, eyelashes, eyebrows or eye shapes.\nDo not draw a nose, nostrils, mouth or lips.\nDo not draw internal lines, marks, shadows or contours that suggest facial features.\n\nThe face must remain a clean uninterrupted skin-colored surface.\n\nPreserve only the outer silhouette and three-dimensional shape of the head and face.\n\nWebster has no glasses, moustache, beard or other facial accessories.\nHair canon: Dark charcoal-black hair.\nMedium length.\nNaturally swept back from the forehead.\nSlightly wavy and loosely structured silhouette.\nModerate volume on top and around the back of the head.\nA few simplified outward strands may define the outer silhouette.\n\nPreserve the canonical hairstyle, length, volume and swept-back silhouette.\nDo not make the hair short, straight, tightly styled or significantly longer.\nHair should remain a simplified solid graphic shape with minimal internal detail.\nImmutable character features: - Preserve Webster's canonical head and face silhouette.\n- Preserve his medium-length dark swept-back wavy hairstyle.\n- Preserve his slim-to-average build and canonical body proportions.\n- Preserve his relatively narrow shoulder width.\n- Keep the facial surface completely featureless.\n- Never add eyes, pupils, irises, eye whites, eyelashes, eyebrows or eye shapes.\n- Never add a nose or nostrils.\n- Never add a mouth or lips.\n- Never add internal facial-feature lines or contours.\n- Never add glasses, facial hair or facial accessories unless explicitly introduced by a future canonical state.\n- Do not make Webster resemble Birdman.\nLocation: Office Lounge\nDescription: Small modern office lounge with muted blue walls and a minimalist interior. A large dark brown sofa stands along the left side of the room, with a rectangular wooden coffee table in front of it. A light-colored office desk is positioned against the far-right side, with a black drip coffee maker on top. A white door with a brass-colored round handle is located on the left wall. The room has a blue-gray floor, white baseboards, and a rectangular ceiling light.\nArchitecture: Rectangular enclosed room with flat blue walls, a blue-gray floor, white baseboards, and a flat ceiling. White single door on the left wall. Large brown sofa positioned along the left side; low rectangular wooden coffee table in the foreground; light-colored rectangular desk positioned toward the rear-right wall. The relative positions and proportions of these architectural and furniture elements should remain consistent between views.\nStyle: Bearridge Minimal Flat\nDescription: Minimalist 2D flat illustration style with simplified geometric forms and a restrained, muted color palette. Characters, objects and environments are constructed from large clean color shapes with very limited internal detail. No visible decorative outlines, no realistic textures, no gradients and no photorealistic rendering. Human anatomy and facial features are intentionally simplified while preserving clear silhouettes and recognizable proportions. Clothing is represented with broad flat shapes and only a few simplified folds. Environments use simplified geometry and reduced architectural detail. The overall image should feel graphic, clean, restrained and cinematic.\nLighting: Simplified graphic lighting using large flat areas of light and shadow. Shadows are broad, hard-edged and minimally detailed rather than physically realistic. Avoid complex light gradients, soft volumetric illumination, glossy reflections, bloom and detailed ambient lighting. Lighting should primarily support composition, silhouettes and separation of forms while preserving the flat illustrated appearance.\nPalette: Restrained muted color palette dominated by dark desaturated blue, teal, charcoal, muted gray, olive and warm brown tones. Skin tones and occasional warm highlights may provide controlled contrast. Use solid flat colors with a limited number of distinct tones per object. Avoid highly saturated colors, colorful gradients and excessive color variation.\nLine: Shape-driven illustration with little to no visible contour linework. Forms should be defined primarily by adjacent flat color areas and silhouettes rather than outlines. Avoid thin decorative lines, sketch lines, comic-style ink outlines and excessive internal line detail.\nAnatomy: Simplified but believable human anatomy with natural adult proportions. Bodies should remain clearly readable through strong silhouettes and large geometric shapes. Reduce anatomical detail while preserving correct limb placement, posture and overall proportions. Avoid exaggerated cartoon anatomy and photorealistic anatomical detail.\nFaces: All human characters have completely featureless facial surfaces.\n\nThe face must contain no internal facial features:\n- no eyes, eyeballs, pupils, irises, eye whites, eyelashes or eye shapes;\n- no eyebrows;\n- no nose or nostrils;\n- no mouth or lips;\n- no internal lines, marks, contours or shading that suggest facial features.\n\nThe facial surface should remain a clean, uninterrupted skin-colored shape.\n\nPreserve the canonical outer silhouette and three-dimensional shape of the head, jaw and face.\n\nCanonical external identity features are allowed only when explicitly defined for a character. These may include glasses, moustaches, beards or other canonical accessories/features.\n\nExternal identity features must not cause missing facial features to be reconstructed.\n\nFor example, glasses must not cause eyes to appear behind the lenses, and a moustache must not cause a mouth or lips to appear beneath it.\n\nCharacter identity should be communicated through head silhouette, hairstyle, canonical facial hair or accessories, body proportions, clothing, pose and body language rather than internal facial features.\nShading: Minimal flat shading. Use a small number of large, hard-edged shadow shapes rather than smooth tonal transitions. Shadows may simplify or merge details into broad dark areas. No gradients, soft airbrushed shading, ambient occlusion, complex reflections or realistic material rendering.\nBackgrounds: Simplified graphic environments built from large geometric shapes and broad areas of flat color. Preserve important architecture, spatial layout, furniture placement and scene readability while removing unnecessary decorative detail and texture. Backgrounds should use the same visual abstraction as the characters and should never become photorealistic.\nCamera: Cinematic but restrained composition using believable perspective and clear staging. Allow wide shots, medium shots, close-ups and varied viewing angles as required by the scene. Prioritize readable silhouettes and composition. Avoid exaggerated wide-angle distortion, fisheye effects, extreme perspective and unnecessary depth-of-field effects.\nNegative rules: No photorealism. No 3D-rendered appearance. No realistic textures. No gradients. No glossy materials. No painterly brushwork. No sketch lines. No detailed comic-book outlines. No visible eyes, eyeballs, pupils, irises, eye whites, eyelashes, or realistic eye details. No detailed facial rendering. No detailed fabric texture. No complex reflections. No bloom. No volumetric lighting. No photographic depth of field. No excessive small details. Do not introduce visual detail absent from the established minimalist flat style.\nNever generate internal facial features on human characters.\n\nNo eyes, pupils, irises, eye whites, eyelashes, eyebrows, noses, nostrils, mouths or lips.\n\nNo subtle facial-feature lines or shading that imply missing facial features.\n\nDo not reconstruct eyes behind canonical glasses.\nDo not reconstruct a mouth beneath canonical facial hair.\n\nDo not add facial features for emotional expression.\nExpress emotion through pose, head orientation, body language and other style-appropriate non-facial cues.\n\nSCENE NARRATIVE CONTEXT:\nWaiting in the Office Lounge\nBirdman is alone in the office lounge, waiting for a meeting. The room is quiet and still. He remains calm and composed while waiting, with no other characters present.\nScene time: Late afternoon\nScene characters: Birdman\n\nCHARACTERS:\nBirdman, Webster\n\nCURRENT STORY STATE:\nBirdman:\nOutfit: Black Overcoat\nOutfit description: Formal monochrome black outfit consisting of a long black overcoat with wide lapels, a fitted black turtleneck, straight black trousers, and polished black dress shoes. The silhouette is clean, structured, and understated, with no visible bright accents or decorative patterns.\nOutfit immutable features: Long black overcoat with wide lapels; black turtleneck; straight black trousers; black dress shoes; monochrome black color palette; no visible logos, patterns, bright colors, or decorative accessories.\nHair: neatly styled, unchanged from canonical reference\nEmotion: calm\nPose: natural upright standing posture\nPosition: standing beside the coffee maker\nWebster:\nOutfit: Beige Suit\nOutfit description: Formal light beige two-piece suit with a clean, elegant and understated appearance.\n\nSingle-breasted light beige suit jacket with classic lapels and a structured but not oversized fit.\nMatching light beige straight-cut suit trousers.\nWhite dress shirt worn with the collar open.\nNo tie.\nSimple black leather belt with a rectangular silver-colored buckle.\nBlack formal leather dress shoes.\n\nThe outfit uses clean simplified geometric shapes consistent with the canonical visual style.\nFabric is represented with flat color areas and only a small number of simplified folds.\nNo visible fabric texture, patterns, logos or decorative elements.\nOutfit immutable features: - Light beige single-breasted suit jacket\n- Matching light beige suit trousers\n- White dress shirt\n- Open shirt collar\n- No tie\n- Black leather belt\n- Simple rectangular silver-colored belt buckle\n- Black formal dress shoes\n- Jacket and trousers must remain the same beige color family\n- Clean formal silhouette\n- No logos\n- No patterns\n- No decorative accessories\n- No bright accent colors\n- Preserve the canonical cut, proportions and overall silhouette of the suit\nHair: canonical hairstyle, unchanged\nEmotion: calm\nPose: natural upright standing posture\nPosition: standing in the open doorway\nTime: Late afternoon\ndoor: open\n\nFRAME INSTRUCTIONS:\nCAMERA:\nKeep exactly the same camera position, angle, framing, and shot size as S001_F004.\nCinematic but restrained composition using believable perspective and clear staging. Allow wide shots, medium shots, close-ups and varied viewing angles as required by the scene. Prioritize readable silhouettes and composition. Avoid exaggerated wide-angle distortion, fisheye effects, extreme perspective and unnecessary depth-of-field effects.\nLocation angle: Ракурс 1\n\nCOMPOSITION:\nPreserve the composition established in S001_F004. Birdman remains in exactly the same position beside the coffee maker. Webster appears standing within the open doorway on the left side of the frame. Keep the sofa, coffee table, desk, coffee maker, open door, and all existing room geometry in the same positions.\n\nACTION:\nWebster stands in the open doorway, facing into the room. He has just arrived and has not entered the room yet. Birdman remains standing beside the coffee maker and continues looking toward the doorway. Both characters remain still and hold no objects.\n\nEXPRESSION:\nBirdman remains calm and alert, standing in the same upright posture and looking toward the doorway.\n\nWebster stands naturally and calmly in the doorway. Preserve Webster's canonical slim-to-average build, dark swept-back wavy hair, head silhouette, and Beige Suit.\n\nBoth characters must follow the canonical featureless-face style. Do not add internal facial features.\n\nLIGHTING:\nKeep exactly the same lighting, shadows, brightness, color palette, and level of visual detail as S001_F004.\n\nCONTINUITY:\nContinue directly from S001_F004. Webster appears in the already open doorway. Birdman does not move. The door remains in the same open position. No existing object or furniture changes position. Preserve everything else from the previous frame.\n- Birdman is waiting for someone to arrive.\n\nREFERENCE IDS:\n- CHAR_BIRDMAN_MASTER_V1\n- CHAR_WEBSTER_MASTER_V1\n- OUTFIT_BIRDMAN_ОБРАЗ_1_MASTER_V1\n- OUTFIT_WEBSTER_ОБРАЗ_1_MASTER_V1\n- LOC_OFFICE_LOUNGE_MASTER_V1\n- ANGLE_OFFICE_LOUNGE_РАКУРС_1_VIEW_V1\n- STYLE_BEARRIDGE_MINIMAL_FLAT_REF_V1\n- STYLE_BEARRIDGE_MINIMAL_FLAT_REF_V2\n- STYLE_BEARRIDGE_MINIMAL_FLAT_REF_V3\n- STYLE_BEARRIDGE_MINIMAL_FLAT_REF_V4\n\nREFERENCE ROLES:\nReference 1:\nCanonical identity reference for Birdman.\n\nReference 2:\nCanonical identity reference for Webster.\n\nReference 3:\nCanonical outfit reference for Birdman / Black Overcoat.\n\nReference 4:\nCanonical outfit reference for Webster / Beige Suit.\n\nReference 5:\nCanonical location reference for Office Lounge.\n\nReference 6:\nCanonical location-angle reference for Office Lounge / Ракурс 1.\n\nReference 7:\nCanonical visual style guidance. Use for style consistency only, not as source of scene content.\n\nReference 8:\nCanonical visual style guidance. Use for style consistency only, not as source of scene content.\n\nReference 9:\nCanonical visual style guidance. Use for style consistency only, not as source of scene content.\n\nReference 10:\nCanonical visual style guidance. Use for style consistency only, not as source of scene content.\n\nCANONICAL IDENTITY:\nCharacter references define exact identity. Do not redesign the character.\n\nPRESERVE:\n- facial identity\n- facial proportions\n- apparent age\n- hairstyle\n- body proportions\n- outfit design\n- room architecture\n- furniture\n- visual style\n\nDO NOT:\n- add accessories\n- change clothing\n- change hair\n- redesign furniture\n- alter permanent architecture\n- invent new props\n- No photorealism. No 3D-rendered appearance. No realistic textures. No gradients. No glossy materials. No painterly brushwork. No sketch lines. No detailed comic-book outlines. No visible eyes, eyeballs, pupils, irises, eye whites, eyelashes, or realistic eye details. No detailed facial rendering. No detailed fabric texture. No complex reflections. No bloom. No volumetric lighting. No photographic depth of field. No excessive small details. Do not introduce visual detail absent from the established minimalist flat style.\nNever generate internal facial features on human characters.\n\nNo eyes, pupils, irises, eye whites, eyelashes, eyebrows, noses, nostrils, mouths or lips.\n\nNo subtle facial-feature lines or shading that imply missing facial features.\n\nDo not reconstruct eyes behind canonical glasses.\nDo not reconstruct a mouth beneath canonical facial hair.\n\nDo not add facial features for emotional expression.\nExpress emotion through pose, head orientation, body language and other style-appropriate non-facial cues.",
+  "deltaInstructions": "EDIT THE PROVIDED PREVIOUS FRAME.\nThe previous frame is the authoritative visual base.\nPreserve everything from the base image unless explicitly changed by the current Frame.\nPreserve camera position and framing unless changed below; room architecture; furniture geometry and placement; unchanged props; lighting unless changed below; visual style; and unchanged character identity, outfit, and state.\nCanonical references are supporting constraints. Preserve identity, canon, and style without redesigning unrelated content from the base image.\nDo not invent props, furniture, architecture, characters, or decorations unless explicitly requested.\nApply only the following current Frame and Story State changes:\nDescription: Webster has appeared in the open doorway while Birdman remains standing beside the coffee maker.\nAction: Webster stands in the open doorway, facing into the room. He has just arrived and has not entered the room yet. Birdman remains standing beside the coffee maker and continues looking toward the doorway. Both characters remain still and hold no objects.\nCamera change: Keep exactly the same camera position, angle, framing, and shot size as S001_F004.\nComposition change: Preserve the composition established in S001_F004. Birdman remains in exactly the same position beside the coffee maker. Webster appears standing within the open doorway on the left side of the frame. Keep the sofa, coffee table, desk, coffee maker, open door, and all existing room geometry in the same positions.\nLighting change: Keep exactly the same lighting, shadows, brightness, color palette, and level of visual detail as S001_F004.\nExpression / pose change: Birdman remains calm and alert, standing in the same upright posture and looking toward the doorway.\n\nWebster stands naturally and calmly in the doorway. Preserve Webster's canonical slim-to-average build, dark swept-back wavy hair, head silhouette, and Beige Suit.\n\nBoth characters must follow the canonical featureless-face style. Do not add internal facial features.\nContinuity notes: Continue directly from S001_F004. Webster appears in the already open doorway. Birdman does not move. The door remains in the same open position. No existing object or furniture changes position. Preserve everything else from the previous frame.\nCurrent Story State: {\"sceneId\":\"cmtmyy8n20001uf583uas8kju\",\"time\":{\"description\":\"Late afternoon\"},\"environment\":{\"door\":\"open\"},\"characters\":{\"cmtmwdlnl0002ufusmp4f4of6\":{\"present\":true,\"outfitId\":\"cmtmwpes40003uftkx1f077j3\",\"emotion\":\"calm\",\"pose\":\"natural upright standing posture\",\"hairState\":\"neatly styled, unchanged from canonical reference\",\"locationPosition\":\"standing beside the coffee maker\"},\"cmuic0fe9000pufd4aoe7211e\":{\"present\":true,\"outfitId\":\"cmuic4un8000tufd47sthdi4n\",\"emotion\":\"calm\",\"pose\":\"natural upright standing posture\",\"hairState\":\"canonical hairstyle, unchanged\",\"locationPosition\":\"standing in the open doorway\"}},\"props\":{},\"storyFacts\":[\"Birdman is waiting for someone to arrive.\"]}",
+  "frameSnapshot": {
+    "id": "cmuic7t7n000xufd4a1zbnxmj",
+    "sceneId": "cmtmyy8n20001uf583uas8kju",
+    "sequence": 5,
+    "frameCode": "S001_F005",
+    "type": "CG",
+    "status": "DRAFT",
+    "generationStrategy": "CONTINUE_PREVIOUS_FRAME",
+    "continuityEditContract": {
+      "changes": [
+        "Webster appears standing in the open doorway."
+      ],
+      "forbidden": [
+        "Do not move Birdman.",
+        "Do not change Birdman's pose or head direction.",
+        "Do not change the position or opening angle of the door.",
+        "Do not place anything in either character's hands.",
+        "Do not add any character other than Webster.",
+        "Do not change the camera or framing.",
+        "Do not move or redesign any existing furniture.",
+        "Do not change the room geometry.",
+        "Do not change the lighting, brightness, palette, or visual style.",
+        "Do not add internal facial features to either character.",
+        "Do not add any new props."
+      ],
+      "allowedChanges": []
+    },
+    "description": "Webster has appeared in the open doorway while Birdman remains standing beside the coffee maker.",
+    "action": "Webster stands in the open doorway, facing into the room. He has just arrived and has not entered the room yet. Birdman remains standing beside the coffee maker and continues looking toward the doorway. Both characters remain still and hold no objects.",
+    "camera": "Keep exactly the same camera position, angle, framing, and shot size as S001_F004.",
+    "composition": "Preserve the composition established in S001_F004. Birdman remains in exactly the same position beside the coffee maker. Webster appears standing within the open doorway on the left side of the frame. Keep the sofa, coffee table, desk, coffee maker, open door, and all existing room geometry in the same positions.",
+    "lighting": "Keep exactly the same lighting, shadows, brightness, color palette, and level of visual detail as S001_F004.",
+    "expressionNotes": "Birdman remains calm and alert, standing in the same upright posture and looking toward the doorway.\n\nWebster stands naturally and calmly in the doorway. Preserve Webster's canonical slim-to-average build, dark swept-back wavy hair, head silhouette, and Beige Suit.\n\nBoth characters must follow the canonical featureless-face style. Do not add internal facial features.",
+    "continuityNotes": "Continue directly from S001_F004. Webster appears in the already open doorway. Birdman does not move. The door remains in the same open position. No existing object or furniture changes position. Preserve everything else from the previous frame.",
+    "previousFrameId": "cmuibjou50001ufd44e45ywbz",
+    "selectedGenerationId": null,
+    "characterIds": [
+      "cmtmwdlnl0002ufusmp4f4of6",
+      "cmuic0fe9000pufd4aoe7211e"
+    ],
+    "additionalCharacterReferenceIds": {
+      "cmtmwdlnl0002ufusmp4f4of6": [],
+      "cmuic0fe9000pufd4aoe7211e": []
+    },
+    "locationId": "cmtmxe6xa0009uft0chtr5dpv",
+    "locationAngleId": "cmtmxfptr000duft0o6mdwqe0",
+    "styleProfileId": "cmtmxymmk0003ufds9loziorw",
+    "targetWidth": 1200,
+    "targetHeight": 675,
+    "targetAspectRatio": 1.777777777777778
+  },
+  "storyStateSnapshot": {
+    "sceneId": "cmtmyy8n20001uf583uas8kju",
+    "time": {
+      "description": "Late afternoon"
+    },
+    "environment": {
+      "door": "open"
+    },
+    "characters": {
+      "cmtmwdlnl0002ufusmp4f4of6": {
+        "present": true,
+        "outfitId": "cmtmwpes40003uftkx1f077j3",
+        "emotion": "calm",
+        "pose": "natural upright standing posture",
+        "hairState": "neatly styled, unchanged from canonical reference",
+        "locationPosition": "standing beside the coffee maker"
+      },
+      "cmuic0fe9000pufd4aoe7211e": {
+        "present": true,
+        "outfitId": "cmuic4un8000tufd47sthdi4n",
+        "emotion": "calm",
+        "pose": "natural upright standing posture",
+        "hairState": "canonical hairstyle, unchanged",
+        "locationPosition": "standing in the open doorway"
+      }
+    },
+    "props": {},
+    "storyFacts": [
+      "Birdman is waiting for someone to arrive."
+    ]
+  },
+  "supportingReferences": [
+    {
+      "id": "cmtmzcdg40005ufiwarkas4ak",
+      "code": "CHAR_BIRDMAN_MASTER_V1",
+      "kind": "character",
+      "filePath": "characters/birdman/birdman.jpg",
+      "priority": 10,
+      "role": "Canonical identity reference for Birdman."
+    },
+    {
+      "id": "cmuic3rfw000rufd4qhc9swvk",
+      "code": "CHAR_WEBSTER_MASTER_V1",
+      "kind": "character",
+      "filePath": "characters/webster/Webster.jpg",
+      "priority": 10,
+      "role": "Canonical identity reference for Webster."
+    },
+    {
+      "id": "cmtmzd9840007ufiwxmac4rvj",
+      "code": "OUTFIT_BIRDMAN_ОБРАЗ_1_MASTER_V1",
+      "kind": "outfit",
+      "filePath": "characters/birdman/outfits/образ-1/birdman.jpg",
+      "priority": 20,
+      "role": "Canonical outfit reference for Birdman / Black Overcoat."
+    },
+    {
+      "id": "cmuic61lb000vufd4lncpg4d9",
+      "code": "OUTFIT_WEBSTER_ОБРАЗ_1_MASTER_V1",
+      "kind": "outfit",
+      "filePath": "characters/webster/outfits/образ-1/Webster.jpg",
+      "priority": 20,
+      "role": "Canonical outfit reference for Webster / Beige Suit."
+    },
+    {
+      "id": "cmtmxffxf000buft000o1gepz",
+      "code": "LOC_OFFICE_LOUNGE_MASTER_V1",
+      "kind": "location",
+      "filePath": "locations/office-lounge/lounge.jpg",
+      "priority": 30,
+      "role": "Canonical location reference for Office Lounge."
+    },
+    {
+      "id": "cmtmxv7rp0001ufdsay0l989c",
+      "code": "ANGLE_OFFICE_LOUNGE_РАКУРС_1_VIEW_V1",
+      "kind": "location-angle",
+      "filePath": "locations/office-lounge/angles/ракурс-1/from_entrance.png",
+      "priority": 35,
+      "role": "Canonical location-angle reference for Office Lounge / Ракурс 1."
+    },
+    {
+      "id": "cmtmyfm3l0001ufvgm34brest",
+      "code": "STYLE_BEARRIDGE_MINIMAL_FLAT_REF_V1",
+      "kind": "style",
+      "filePath": "style/bearridge-minimal-flat/2._ElevatorLight_x0y0.png",
+      "priority": 40,
+      "role": "Canonical visual style guidance. Use for style consistency only, not as source of scene content."
+    },
+    {
+      "id": "cmtmyfofz0003ufvg1d9kabu4",
+      "code": "STYLE_BEARRIDGE_MINIMAL_FLAT_REF_V2",
+      "kind": "style",
+      "filePath": "style/bearridge-minimal-flat/CoffeeGiving_x0y0.png",
+      "priority": 41,
+      "role": "Canonical visual style guidance. Use for style consistency only, not as source of scene content."
+    },
+    {
+      "id": "cmtmyfq040005ufvg6u6pxaci",
+      "code": "STYLE_BEARRIDGE_MINIMAL_FLAT_REF_V3",
+      "kind": "style",
+      "filePath": "style/bearridge-minimal-flat/ViewThroughWindow_x0y471.png",
+      "priority": 42,
+      "role": "Canonical visual style guidance. Use for style consistency only, not as source of scene content."
+    },
+    {
+      "id": "cmtmyfrnm0007ufvgod7viuc2",
+      "code": "STYLE_BEARRIDGE_MINIMAL_FLAT_REF_V4",
+      "kind": "style",
+      "filePath": "style/bearridge-minimal-flat/WayToCabinet_x687y0.png",
+      "priority": 43,
+      "role": "Canonical visual style guidance. Use for style consistency only, not as source of scene content."
+    }
+  ],
+  "visualReferencesActuallyExported": [
+    "cmtmzcdg40005ufiwarkas4ak",
+    "cmuic3rfw000rufd4qhc9swvk"
+  ]
+}

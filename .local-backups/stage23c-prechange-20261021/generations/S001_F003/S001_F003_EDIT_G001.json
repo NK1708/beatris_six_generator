@@ -1,0 +1,153 @@
+{
+  "provider": "openai",
+  "model": "gpt-image-2.5-sunburst",
+  "frame": "S001_F003",
+  "references": [
+    "CHAR_BIRDMAN_MASTER_V1",
+    "CHAR_BIRDMAN_FULL_BODY_FRONT_V1",
+    "OUTFIT_BIRDMAN_ОБРАЗ_1_MASTER_V1",
+    "LOC_OFFICE_LOUNGE_MASTER_V1",
+    "ANGLE_OFFICE_LOUNGE_РАКУРС_1_VIEW_V1",
+    "STYLE_BEARRIDGE_MINIMAL_FLAT_REF_V1",
+    "STYLE_BEARRIDGE_MINIMAL_FLAT_REF_V2",
+    "STYLE_BEARRIDGE_MINIMAL_FLAT_REF_V3",
+    "STYLE_BEARRIDGE_MINIMAL_FLAT_REF_V4"
+  ],
+  "referenceRoles": [
+    {
+      "code": "CHAR_BIRDMAN_MASTER_V1",
+      "kind": "character",
+      "role": "Canonical identity reference for Birdman."
+    },
+    {
+      "code": "CHAR_BIRDMAN_FULL_BODY_FRONT_V1",
+      "kind": "character",
+      "role": "Additional canonical full body front reference for Birdman. Use to preserve body proportions, build, clothing silhouette, and full-body identity. This supplements the MASTER and must not redesign the character."
+    },
+    {
+      "code": "OUTFIT_BIRDMAN_ОБРАЗ_1_MASTER_V1",
+      "kind": "outfit",
+      "role": "Canonical outfit reference for Birdman / Black Overcoat."
+    },
+    {
+      "code": "LOC_OFFICE_LOUNGE_MASTER_V1",
+      "kind": "location",
+      "role": "Canonical location reference for Office Lounge."
+    },
+    {
+      "code": "ANGLE_OFFICE_LOUNGE_РАКУРС_1_VIEW_V1",
+      "kind": "location-angle",
+      "role": "Canonical location-angle reference for Office Lounge / Ракурс 1."
+    },
+    {
+      "code": "STYLE_BEARRIDGE_MINIMAL_FLAT_REF_V1",
+      "kind": "style",
+      "role": "Canonical visual style guidance. Use for style consistency only, not as source of scene content."
+    },
+    {
+      "code": "STYLE_BEARRIDGE_MINIMAL_FLAT_REF_V2",
+      "kind": "style",
+      "role": "Canonical visual style guidance. Use for style consistency only, not as source of scene content."
+    },
+    {
+      "code": "STYLE_BEARRIDGE_MINIMAL_FLAT_REF_V3",
+      "kind": "style",
+      "role": "Canonical visual style guidance. Use for style consistency only, not as source of scene content."
+    },
+    {
+      "code": "STYLE_BEARRIDGE_MINIMAL_FLAT_REF_V4",
+      "kind": "style",
+      "role": "Canonical visual style guidance. Use for style consistency only, not as source of scene content."
+    }
+  ],
+  "storyState": {
+    "sceneId": "cmtmyy8n20001uf583uas8kju",
+    "time": {
+      "description": "Late afternoon"
+    },
+    "environment": {
+      "door": "closed"
+    },
+    "characters": {
+      "cmtmwdlnl0002ufusmp4f4of6": {
+        "present": true,
+        "outfitId": "cmtmwpes40003uftkx1f077j3",
+        "emotion": "calm",
+        "pose": "natural upright standing posture",
+        "hairState": "neatly styled, unchanged from canonical reference",
+        "locationPosition": "standing beside the coffee maker"
+      }
+    },
+    "props": {},
+    "storyFacts": [
+      "Birdman is waiting for someone to arrive."
+    ]
+  },
+  "frameSnapshot": {
+    "id": "cmugzzynp0001ufgge8vplg8o",
+    "sceneId": "cmtmyy8n20001uf583uas8kju",
+    "sequence": 3,
+    "frameCode": "S001_F003",
+    "type": "CG",
+    "status": "DRAFT",
+    "generationStrategy": "CONTINUE_PREVIOUS_FRAME",
+    "continuityEditContract": {
+      "changes": [
+        "Birdman turns only his head toward the closed door",
+        "Birdman's hands are empty"
+      ],
+      "forbidden": [
+        "Do not move Birdman's body",
+        "Do not move Birdman away from his current position",
+        "Do not add any new props",
+        "Do not place anything in Birdman's hands",
+        "Do not change Birdman's outfit",
+        "Do not change the camera or framing",
+        "Do not move or redesign any furniture",
+        "Do not change the room geometry",
+        "Do not change the lighting, brightness, palette, or visual style",
+        "Do not increase character or environment detail",
+        "Do not show a cup or mug anywhere in the frame"
+      ],
+      "allowedChanges": []
+    },
+    "description": "Birdman remains standing beside the coffee maker after hearing a sound from the direction of the door.",
+    "action": "Birdman remains standing beside the coffee maker. His body stays in the same position, but he turns his head toward the closed door as if he has just heard a sound. Both arms hang naturally at his sides. His hands are empty.",
+    "camera": "Keep exactly the same camera position, angle, framing, and shot size as S001_F002.",
+    "composition": "Preserve the composition established in S001_F002. Birdman remains beside the coffee maker. Keep the sofa, coffee table, desk, coffee maker, door, and all room geometry in the same positions.",
+    "lighting": "Keep exactly the same lighting, shadows, brightness, color palette, and level of visual detail as S001_F002.",
+    "expressionNotes": "Calm, alert expression. Natural upright standing posture. Only Birdman's head turns toward the door. Preserve his body position, proportions, Black Overcoat, glasses, mustache, hairstyle, and simplified facial design. No visible eyes.",
+    "continuityNotes": "Continue directly from S001_F002. Birdman remains in the same standing position beside the coffee maker. His hands are empty and no cup, mug, or other held object is present. He has heard a sound and turns only his head toward the closed door. Preserve everything else from the previous frame.",
+    "previousFrameId": "cmufi7xu90001ufs0m3khlpmb",
+    "selectedGenerationId": null,
+    "characterIds": [
+      "cmtmwdlnl0002ufusmp4f4of6"
+    ],
+    "additionalCharacterReferenceIds": {
+      "cmtmwdlnl0002ufusmp4f4of6": [
+        "cmtmwoise0001uftk3u04k2yo"
+      ]
+    },
+    "locationId": "cmtmxe6xa0009uft0chtr5dpv",
+    "locationAngleId": "cmtmxfptr000duft0o6mdwqe0",
+    "styleProfileId": "cmtmxymmk0003ufds9loziorw",
+    "targetWidth": 1200,
+    "targetHeight": 675,
+    "targetAspectRatio": 1.777777777777778
+  },
+  "strategy": "CONTINUE_PREVIOUS_FRAME",
+  "baseFrameId": "cmufi7xu90001ufs0m3khlpmb",
+  "baseGenerationId": "cmugzmbjj000dufmgviqd5we2",
+  "baseImagePath": "generations/S001_F002/S001_F002_CHATGPT_G003.png",
+  "deltaInstructions": "EDIT THE PROVIDED PREVIOUS FRAME.\nThe previous frame is the authoritative visual base.\nPreserve everything from the base image unless explicitly changed by the current Frame.\nPreserve camera position and framing unless changed below; room architecture; furniture geometry and placement; unchanged props; lighting unless changed below; visual style; and unchanged character identity, outfit, and state.\nCanonical references are supporting constraints. Preserve identity, canon, and style without redesigning unrelated content from the base image.\nDo not invent props, furniture, architecture, characters, or decorations unless explicitly requested.\nApply only the following current Frame and Story State changes:\nDescription: Birdman remains standing beside the coffee maker after hearing a sound from the direction of the door.\nAction: Birdman remains standing beside the coffee maker. His body stays in the same position, but he turns his head toward the closed door as if he has just heard a sound. Both arms hang naturally at his sides. His hands are empty.\nCamera change: Keep exactly the same camera position, angle, framing, and shot size as S001_F002.\nComposition change: Preserve the composition established in S001_F002. Birdman remains beside the coffee maker. Keep the sofa, coffee table, desk, coffee maker, door, and all room geometry in the same positions.\nLighting change: Keep exactly the same lighting, shadows, brightness, color palette, and level of visual detail as S001_F002.\nExpression / pose change: Calm, alert expression. Natural upright standing posture. Only Birdman's head turns toward the door. Preserve his body position, proportions, Black Overcoat, glasses, mustache, hairstyle, and simplified facial design. No visible eyes.\nContinuity notes: Continue directly from S001_F002. Birdman remains in the same standing position beside the coffee maker. His hands are empty and no cup, mug, or other held object is present. He has heard a sound and turns only his head toward the closed door. Preserve everything else from the previous frame.\nCurrent Story State: {\"sceneId\":\"cmtmyy8n20001uf583uas8kju\",\"time\":{\"description\":\"Late afternoon\"},\"environment\":{\"door\":\"closed\"},\"characters\":{\"cmtmwdlnl0002ufusmp4f4of6\":{\"present\":true,\"outfitId\":\"cmtmwpes40003uftkx1f077j3\",\"emotion\":\"calm\",\"pose\":\"natural upright standing posture\",\"hairState\":\"neatly styled, unchanged from canonical reference\",\"locationPosition\":\"standing beside the coffee maker\"}},\"props\":{},\"storyFacts\":[\"Birdman is waiting for someone to arrive.\"]}",
+  "geometry": {
+    "targetWidth": 1200,
+    "targetHeight": 675,
+    "targetAspectRatio": 1.7777777777777777,
+    "generationAspectRatio": "16:9",
+    "generationResolution": "1536x864",
+    "requiresCrop": false,
+    "cropStrategy": "NONE"
+  },
+  "timestamp": "2026-09-25T13:52:53.623Z"
+}

@@ -1,4 +1,5 @@
 import React from "react";
+import { EnvironmentStateEditor, reportEnvironmentValidity } from "../components/EnvironmentStateEditor.js";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { ArrowLeft, ArrowRight, Brush, Check, Download, ImagePlus, Loader2, Map, Save, Settings, Upload, User, Wrench, X } from "lucide-react";
 import { api } from "../api.js";
@@ -91,6 +92,7 @@ export function FrameEditor({ project }: { project: Project }) {
   const saveFrame = useMutation({
     mutationFn: () => {
       if (!frame) throw new Error("Выберите кадр.");
+      if (frame.status === "LOCKED") throw new Error("Закреплённый кадр нельзя редактировать.");
       const original = frameToDraft(frame);
       const castChanged = frameDraft.characterCastMode !== original.characterCastMode
         || JSON.stringify(frameDraft.characterIds) !== JSON.stringify(original.characterIds)
@@ -202,11 +204,13 @@ export function FrameEditor({ project }: { project: Project }) {
         {hasFrameChanges ? <span className="status status-unsaved">Не сохранено</span> : null}
         <button type="button" title="Предыдущий кадр" aria-label="Предыдущий кадр" disabled={frameIndex <= 0} onClick={() => { const previous = sceneFrames[frameIndex - 1]; if (previous) selectFrame(previous.id); }}><ArrowLeft size={16} /></button>
         <button type="button" title="Следующий кадр" aria-label="Следующий кадр" disabled={!scene || frameIndex < 0 || frameIndex >= sceneFrames.length - 1} onClick={() => { const next = sceneFrames[frameIndex + 1]; if (next) selectFrame(next.id); }}><ArrowRight size={16} /></button>
-        <button disabled={!frame || !hasFrameChanges || saveFrame.isPending} onClick={() => saveFrame.mutate()}>{saveFrame.isPending ? <Loader2 className="spin" size={16} /> : <Save size={16} />} Сохранить кадр</button>
+        <button disabled={!frame || frame.status === "LOCKED" || !hasFrameChanges || saveFrame.isPending} onClick={() => saveFrame.mutate()}>{saveFrame.isPending ? <Loader2 className="spin" size={16} /> : <Save size={16} />} Сохранить кадр</button>
         <button disabled={!frame || hasFrameChanges || exportForChatGPT.isPending || blockingWarnings.length > 0} onClick={() => exportForChatGPT.mutate()}>{exportForChatGPT.isPending ? <Loader2 className="spin" size={16} /> : <Download size={16} />} Export for ChatGPT</button>
         <input ref={importInput} hidden type="file" accept="image/png,image/jpeg,image/webp" onChange={(event) => { const file = event.target.files?.[0]; if (file) importChatGPT.mutate(file); event.target.value = ""; }} />
         <div className="frameImportAction"><button disabled={!frame || !selectedExport || importChatGPT.isPending} title={selectedExport ? `Receipt ${selectedExport.exportId}` : "Сначала выберите export receipt"} onClick={() => importInput.current?.click()}>{importChatGPT.isPending ? <Loader2 className="spin" size={16} /> : <Upload size={16} />} Import ChatGPT Result</button><small>{selectedExport ? `Receipt ${selectedExport.exportId.slice(0, 8)} · ${new Date(selectedExport.createdAt).toLocaleString()}` : "Нет выбранного receipt"}</small></div>
       </div>
+      {saveFrame.error ? <p className="warning" role="alert">{saveFrame.error.message}</p> : null}
+      {frame?.status === "LOCKED" ? <p className="muted" role="status">Кадр закреплён. Постановка и контекст доступны только для просмотра.</p> : null}
       {exportForChatGPT.error ? <p className="warning">{exportForChatGPT.error.message}</p> : null}
       {importChatGPT.error ? <p className="warning">{importChatGPT.error.message}</p> : null}
       <div className="editorGrid">
@@ -242,6 +246,7 @@ export function FrameEditor({ project }: { project: Project }) {
           <label>Сцена<select value={scene?.id ?? ""} onChange={(event) => selectScene(event.target.value)}>{project.scenes.map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}</select></label>
           <label>Кадр<select value={frame?.id ?? ""} onChange={(event) => selectFrame(event.target.value)}><option value="" disabled>{sceneFrames.length ? "Выберите кадр" : "Кадров пока нет"}</option>{sceneFrames.map((item) => <option key={item.id} value={item.id}>{item.frameCode}</option>)}</select></label>
           <button className="frameNewButton" disabled={!scene || hasFrameChanges || createFrame.isPending} onClick={() => createFrame.mutate()}>{createFrame.isPending ? <Loader2 className="spin" size={16} /> : <ImagePlus size={16} />} Новый кадр</button>
+          <fieldset disabled={frame?.status === "LOCKED"} aria-label="Постановка и контекст кадра" style={{ display: "contents", border: 0, padding: 0, margin: 0 }}>
           <label>Стратегия генерации<select disabled={!frame} value={frame ? frameDraft.generationStrategy : "NEW_COMPOSITION"} onChange={(event) => setFrameDraft({ ...frameDraft, generationStrategy: event.target.value as Frame["generationStrategy"] })}><option value="NEW_COMPOSITION">Новая композиция</option><option value="CONTINUE_PREVIOUS_FRAME">Продолжить предыдущий кадр</option></select><small>{frameDraft.generationStrategy === "CONTINUE_PREVIOUS_FRAME" ? "Использовать предыдущий закреплённый кадр как визуальную основу и применить контролируемое изменение." : "Создать новую композицию по каноническим референсам."}</small></label>
           <details className="frameFieldGroup" open={openSections.main}><summary onClick={(event) => { event.preventDefault(); toggleSection("main"); }}>Основное</summary><div className="frameSectionBody">
           <label>Описание кадра<textarea disabled={!frame} value={frame ? frameDraft.description : ""} onChange={(event) => setFrameDraft({ ...frameDraft, description: event.target.value })} /></label>
@@ -310,6 +315,7 @@ export function FrameEditor({ project }: { project: Project }) {
           <label>Ширина panel<input value={frame ? frameDraft.targetWidth : targetWidth} onChange={(event) => frame ? setFrameDraft({ ...frameDraft, targetWidth: event.target.value }) : setTargetWidth(event.target.value)} /></label>
           <label>Высота panel<input value={frame ? frameDraft.targetHeight : targetHeight} onChange={(event) => frame ? setFrameDraft({ ...frameDraft, targetHeight: event.target.value }) : setTargetHeight(event.target.value)} /></label>
           </div></div></details>
+          </fieldset>
           <FrameTargetStoryStatePanel frameId={frame?.id ?? null} frameStatus={frame?.status ?? null} characters={project.characters} />
         </div>
         <details className="technicalDetails"><summary>Технические детали</summary><div className="frameSectionBody"><div className="referenceList">
@@ -389,7 +395,7 @@ export function StoryStateEditor({ project }: { project: Project }) {
 
   return (
     <section className="sideSection">
-      <div className="toolbar"><h2>Текущее состояние сцены</h2><button onClick={() => save.mutate()} title="Сохранить состояние сцены"><Save size={16} /></button></div>
+      <div className="toolbar"><h2>Текущее состояние сцены</h2><button onClick={(event) => { const section = event.currentTarget.closest("section"); if (section && reportEnvironmentValidity(section)) save.mutate(); }} title="Сохранить состояние сцены"><Save size={16} /></button></div>
       <label>Время<input value={state.time.description} onChange={(event) => setState({ ...state, time: { description: event.target.value } })} /></label>
       <EnvironmentStateEditor state={state} onChange={setState} />
       {project.characters.map((character) => (
@@ -428,35 +434,6 @@ function CharacterStateFields({ character, state, onChange }: { character: Chara
           <label>В руках<input value={(current.heldProps ?? []).join(", ")} onChange={(event) => update({ heldProps: splitList(event.target.value) })} /></label>
         </div>
       ) : null}
-    </div>
-  );
-}
-
-function EnvironmentStateEditor({ state, onChange }: { state: StoryStateDocument; onChange(next: StoryStateDocument): void }) {
-  const entries = Object.entries(state.environment);
-  const updateKey = (oldKey: string, nextKey: string) => {
-    const nextEnvironment = { ...state.environment };
-    const value = nextEnvironment[oldKey];
-    delete nextEnvironment[oldKey];
-    if (nextKey.trim()) nextEnvironment[nextKey.trim()] = value ?? "";
-    onChange({ ...state, environment: nextEnvironment });
-  };
-  const updateValue = (key: string, value: string) => onChange({ ...state, environment: { ...state.environment, [key]: value } });
-  const remove = (key: string) => {
-    const nextEnvironment = { ...state.environment };
-    delete nextEnvironment[key];
-    onChange({ ...state, environment: nextEnvironment });
-  };
-  return (
-    <div className="versionBlock">
-      <div className="toolbar"><h3>Окружение</h3><button onClick={() => onChange({ ...state, environment: { ...state.environment, [`state_${entries.length + 1}`]: "" } })}><ImagePlus size={16} /> Добавить</button></div>
-      {entries.length ? entries.map(([key, value]) => (
-        <div className="keyValueRow" key={key}>
-          <input value={key} onChange={(event) => updateKey(key, event.target.value)} />
-          <input value={String(value ?? "")} onChange={(event) => updateValue(key, event.target.value)} />
-          <button onClick={() => remove(key)} title="Удалить"><X size={14} /></button>
-        </div>
-      )) : <p className="muted">Нет зафиксированных условий окружения.</p>}
     </div>
   );
 }

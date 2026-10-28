@@ -67,6 +67,7 @@ function fakePrisma(references: Array<Record<string, string>>, update = vi.fn(),
   const transactionClient = {
     frameCharacter: { deleteMany: vi.fn() },
     frame: {
+      updateMany: vi.fn().mockResolvedValue({ count: frameOverrides.status === "LOCKED" ? 0 : 1 }),
       findUnique: vi.fn().mockResolvedValue({ id: "frame-1", sceneId: "scene-1", sequence: 1, status: "DRAFT", characterCastRevision: 0, scene: { projectId: "project-1", characters: [] }, ...frameOverrides }),
       update
     },

@@ -43,6 +43,7 @@ import { createChatGPTRepairExport } from "./services/chatGPTRepairService.js";
 import { importChatGPTResult, listChatGPTExports } from "./services/chatGPTImportService.js";
 import { createLocationAngle, lockReferenceAsCanonical, setReferenceStatus, uploadReferenceVersion } from "./services/referenceService.js";
 import { updateFrameContext } from "./services/frameContextService.js";
+import { updateFrame } from "./services/frameUpdateService.js";
 import { GenerationReviewError, lockFrameWithSelectedGeneration, selectGenerationForFrame } from "./services/generationReviewService.js";
 import { getFrameLockReadiness } from "./services/frameLockReadinessService.js";
 import { ProductionGenerationReadinessError } from "./services/productionGenerationGate.js";
@@ -412,37 +413,7 @@ export function createApp() {
   app.put("/api/frames/:frameId", asyncHandler(async (request, response) => {
     const input = updateFrameSchema.parse({ ...request.body, frameId: requiredParam(request, "frameId") });
     const { prisma } = projectDbManager.getActiveProject();
-    const targetAspectRatio = input.targetAspectRatio
-      ?? (input.targetWidth && input.targetHeight ? input.targetWidth / input.targetHeight : null);
-    let frame = await prisma.frame.update({
-      where: { id: input.frameId },
-      data: {
-        ...(input.generationStrategy ? { generationStrategy: input.generationStrategy } : {}),
-        ...(input.continuityEditContract ? { continuityEditContract: JSON.stringify(input.continuityEditContract) } : {}),
-        description: input.description,
-        action: input.action,
-        camera: input.camera,
-        composition: input.composition,
-        lighting: input.lighting,
-        expressionNotes: input.expressionNotes,
-        continuityNotes: input.continuityNotes,
-        targetWidth: input.targetWidth ?? null,
-        targetHeight: input.targetHeight ?? null,
-        targetAspectRatio
-      }
-    });
-    if (input.characterIds !== undefined || input.characterCastMode !== undefined || input.locationId !== undefined || input.locationAngleId !== undefined || input.styleProfileId !== undefined) {
-      frame = await updateFrameContext(prisma, {
-        frameId: input.frameId,
-        characterIds: input.characterIds,
-        characterCastMode: input.characterCastMode,
-        expectedCharacterCastRevision: input.expectedCharacterCastRevision,
-        additionalCharacterReferenceIds: input.additionalCharacterReferenceIds ?? {},
-        locationId: input.locationId,
-        locationAngleId: input.locationAngleId,
-        styleProfileId: input.styleProfileId
-      });
-    }
+    const frame = await updateFrame(prisma, input);
     response.json(frame);
   }));
 

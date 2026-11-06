@@ -1,0 +1,1 @@
+{"version":3,"file":"confirmedLock.d.ts","sourceRoot":"","sources":["../../src/confirmedLock.ts"],"names":[],"mappings":"AAAA,OAAO,KAAK,EAAE,qBAAqB,EAAE,MAAM,mBAAmB,CAAC;AAG/D,OAAO,KAAK,EAAE,KAAK,EAAE,MAAM,YAAY,CAAC;AAExC,wBAAsB,oBAAoB,CAAC,OAAO,EAAE,MAAM,EAAE,QAAQ,EAAE,qBAAqB,GAAG,OAAO,CAAC,IAAI,CAAC,KAAK,EAAE,IAAI,GAAG,QAAQ,GAAG,sBAAsB,CAAC,CAAC,CAW3J"}

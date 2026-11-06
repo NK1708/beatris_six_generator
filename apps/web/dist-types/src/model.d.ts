@@ -1,7 +1,7 @@
 import type { StoryStateDocument } from "@bearridge/shared";
 export type AssetStatus = "DRAFT" | "APPROVED" | "LOCKED" | "DEPRECATED" | "REJECTED";
 export type FrameStatus = "DRAFT" | "GENERATING" | "REVIEW" | "LOCKED" | "REJECTED";
-export type Section = "project" | "characters" | "locations" | "styles" | "scenes" | "storyboard" | "frames" | "generations" | "settings" | "advanced";
+export type Section = "outfits" | "project" | "characters" | "locations" | "styles" | "scenes" | "storyboard" | "frames" | "generations" | "settings" | "advanced";
 export type OwnerType = "character" | "outfit" | "location" | "locationAngle" | "style";
 export interface RegistryProject {
     id: string;
@@ -159,6 +159,13 @@ export interface Generation {
     model: string;
     outputFilePath: string;
     createdAt: string;
+    resolution?: string;
+    aspectRatio?: string;
+    rawMetadata?: string | null;
+    completedAt?: string | null;
+    parentGenerationId?: string | null;
+    frameSnapshot?: string;
+    storyStateSnapshot?: string | null;
     targetWidth?: number | null;
     targetHeight?: number | null;
     targetAspectRatio?: number | null;
@@ -190,6 +197,10 @@ export interface Reference {
     version: number;
 }
 export interface PreviewResponse {
+    productionTarget?: {
+        revision: number;
+        fingerprint: string;
+    };
     strategy: Frame["generationStrategy"];
     baseReference?: {
         id: string;

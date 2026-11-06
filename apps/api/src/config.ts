@@ -18,9 +18,10 @@ const configSchema = z.object({
 
 const parsed = configSchema.parse(process.env);
 const isTestRuntime = process.env.VITEST === "true";
+const apiRoot = path.resolve(import.meta.dirname, "..");
 const projectsRoot = isTestRuntime
   ? path.join(os.tmpdir(), `bearridge-vitest-${process.pid}`)
-  : path.resolve(process.cwd(), parsed.PROJECTS_ROOT);
+  : path.resolve(apiRoot, parsed.PROJECTS_ROOT);
 
 export const config = {
   databaseUrl: parsed.DATABASE_URL,

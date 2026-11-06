@@ -51,11 +51,12 @@ export class ProjectDatabaseManager {
 
   async listRegistry(): Promise<ProjectRegistryEntry[]> {
     await this.init();
-    return this.appPrisma.$queryRaw<ProjectRegistryEntry[]>`
+    const rows = await this.appPrisma.$queryRaw<ProjectRegistryEntry[]>`
       SELECT id, name, projectPath, lastOpenedAt, createdAt
       FROM ProjectRegistryEntry
       ORDER BY COALESCE(lastOpenedAt, createdAt) DESC
     `;
+    return rows.map((entry) => ({ ...entry, projectPath: this.resolveRegistryPath(entry.projectPath) }));
   }
 
   async createProject(rawInput: unknown): Promise<ProjectContext> {
@@ -104,6 +105,12 @@ export class ProjectDatabaseManager {
     await assertFileExists(manifestPath, "project.json not found in selected folder.");
     await assertFileExists(databasePath, "project.sqlite not found in selected folder.");
 
+    const manifest = await readProjectManifest(manifestPath);
+    const databaseProjectId = await readProjectIdReadOnly(databasePath);
+    if (manifest.id !== databaseProjectId) {
+      throw new AppError("project.json does not belong to this project.sqlite.", 409, "PROJECT_ID_MISMATCH");
+    }
+
     await initSqliteSchema(sqliteUrl(databasePath));
 
     const prisma = new PrismaClient({ datasources: { db: { url: sqliteUrl(databasePath) } } });
@@ -130,7 +137,11 @@ export class ProjectDatabaseManager {
     if (!entry) {
       throw new NotFoundError("Registered project not found.");
     }
-    return this.openProject({ projectPath: entry.projectPath });
+    let projectPath = this.resolveRegistryPath(entry.projectPath);
+    if (!await projectFolderExists(projectPath)) {
+      projectPath = await this.recoverRegisteredProjectPath(entry.id, projectPath);
+    }
+    return this.openProject({ projectPath });
   }
 
   async deleteProject(rawInput: unknown): Promise<{ id: string; projectPath: string; deletedFiles: boolean }> {
@@ -146,12 +157,13 @@ export class ProjectDatabaseManager {
     if (!entry) {
       throw new NotFoundError("Registered project not found.");
     }
+    const projectPath = this.resolveRegistryPath(entry.projectPath);
 
     if (input.deleteFiles) {
       if (input.confirmationName !== entry.name) {
         throw new AppError("Project folder deletion requires exact project name confirmation.", 400, "PROJECT_DELETE_CONFIRMATION_REQUIRED");
       }
-      await assertDeletableProjectFolder(entry.projectPath);
+      await assertDeletableProjectFolder(projectPath);
     }
 
     if (this.active?.context.project.id === input.projectId) {
@@ -163,10 +175,10 @@ export class ProjectDatabaseManager {
     `;
 
     if (input.deleteFiles) {
-      await fs.rm(entry.projectPath, { recursive: true, force: false });
+      await fs.rm(projectPath, { recursive: true, force: false });
     }
 
-    return { id: input.projectId, projectPath: entry.projectPath, deletedFiles: input.deleteFiles };
+    return { id: input.projectId, projectPath, deletedFiles: input.deleteFiles };
   }
 
   async closeProject(): Promise<void> {
@@ -244,14 +256,52 @@ export class ProjectDatabaseManager {
   }
 
   private async registerProject(id: string, name: string, projectPath: string): Promise<void> {
+    const storedPath = this.registryPathForStorage(projectPath);
     await this.appPrisma.$executeRaw`
       DELETE FROM ProjectRegistryEntry
-      WHERE id = ${id} OR projectPath = ${projectPath}
+      WHERE id = ${id} OR projectPath = ${storedPath}
     `;
     await this.appPrisma.$executeRaw`
       INSERT INTO ProjectRegistryEntry (id, name, projectPath, lastOpenedAt, createdAt)
-      VALUES (${id}, ${name}, ${projectPath}, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+      VALUES (${id}, ${name}, ${storedPath}, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
     `;
+  }
+
+  private registryPathForStorage(projectPath: string): string {
+    const relative = path.relative(config.projectsRoot, path.resolve(projectPath));
+    if (relative && !relative.startsWith(`..${path.sep}`) && relative !== ".." && !path.isAbsolute(relative)) {
+      return `./${relative.replaceAll("\\", "/")}`;
+    }
+    return path.resolve(projectPath);
+  }
+
+  private resolveRegistryPath(storedPath: string): string {
+    return path.isAbsolute(storedPath) || path.win32.isAbsolute(storedPath)
+      ? path.resolve(storedPath)
+      : path.resolve(config.projectsRoot, storedPath);
+  }
+
+  private async recoverRegisteredProjectPath(projectId: string, stalePath: string): Promise<string> {
+    const entries = await fs.readdir(config.projectsRoot, { withFileTypes: true });
+    const matches: string[] = [];
+    for (const entry of entries) {
+      if (!entry.isDirectory()) continue;
+      const candidate = path.join(config.projectsRoot, entry.name);
+      try {
+        const manifest = await readProjectManifest(path.join(candidate, "project.json"));
+        if (manifest.id === projectId && await projectFolderExists(candidate)) matches.push(candidate);
+      } catch {
+        // Unrelated or incomplete directories are not project candidates.
+      }
+    }
+    if (matches.length === 1) {
+      await this.appPrisma.$executeRaw`UPDATE ProjectRegistryEntry SET projectPath = ${this.registryPathForStorage(matches[0]!)} WHERE id = ${projectId}`;
+      return matches[0]!;
+    }
+    if (matches.length > 1) {
+      throw new AppError("Multiple project folders have the same project ID. Open the intended folder explicitly.", 409, "PROJECT_PATH_AMBIGUOUS");
+    }
+    throw new AppError(`Registered project folder is unavailable: ${stalePath}. Select the moved project folder with Open Project.`, 404, "PROJECT_PATH_STALE");
   }
 }
 
@@ -274,6 +324,35 @@ async function assertFileExists(filePath: string, message: string): Promise<void
 
 export function sqliteUrl(databasePath: string): string {
   return `file:${databasePath.replace(/\\/g, "/")}`;
+}
+
+async function projectFolderExists(projectPath: string): Promise<boolean> {
+  try {
+    await Promise.all([fs.access(path.join(projectPath, "project.json")), fs.access(path.join(projectPath, "project.sqlite"))]);
+    return true;
+  } catch { return false; }
+}
+
+async function readProjectManifest(manifestPath: string): Promise<{ id: string }> {
+  let parsed: unknown;
+  try { parsed = JSON.parse(await fs.readFile(manifestPath, "utf8")); }
+  catch { throw new AppError("project.json is missing, unreadable, or invalid JSON.", 400, "PROJECT_MANIFEST_INVALID"); }
+  if (!parsed || typeof parsed !== "object" || !("id" in parsed) || typeof parsed.id !== "string" || !parsed.id.trim()) {
+    throw new AppError("project.json does not contain a valid project ID.", 400, "PROJECT_MANIFEST_INVALID");
+  }
+  return { id: parsed.id };
+}
+
+async function readProjectIdReadOnly(databasePath: string): Promise<string> {
+  const prisma = new PrismaClient({ datasources: { db: { url: `${sqliteUrl(databasePath)}?mode=ro&immutable=1` } } });
+  try {
+    const rows = await prisma.$queryRawUnsafe<Array<{ id: string }>>(`SELECT "id" FROM "Project" LIMIT 1`);
+    if (!rows[0]?.id) throw new AppError("Project metadata not found in project.sqlite.", 404, "PROJECT_METADATA_MISSING");
+    return rows[0].id;
+  } catch (error) {
+    if (error instanceof AppError) throw error;
+    throw new AppError("project.sqlite is unavailable or unreadable.", 400, "PROJECT_DATABASE_UNREADABLE");
+  } finally { await prisma.$disconnect(); }
 }
 
 export const projectDbManager = new ProjectDatabaseManager();

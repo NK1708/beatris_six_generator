@@ -38,14 +38,15 @@ function render(data, receipts = []) {
     return renderToStaticMarkup(React.createElement(QueryClientProvider, { client }, React.createElement(FrameEditor, { project: data })));
 }
 describe("Frame Workspace polish", () => {
-    it("opens Basic and Camera for a new composition, leaving context and technical details closed", () => {
+    it("opens Basic and Camera while keeping other Inspector tabs mounted and hidden", () => {
         const html = render(project([frame("f1", 1, "NEW_COMPOSITION")]));
         expect(initialFrameSections("NEW_COMPOSITION")).toEqual({ main: true, camera: true, continuity: false });
         expect(html).toMatch(/<details class="frameFieldGroup" open=""><summary>Основное<\/summary>/u);
         expect(html).toMatch(/<details class="frameFieldGroup" open=""><summary>Камера и постановка<\/summary>/u);
         expect(html).not.toContain("Продолжение и изменения</summary>");
-        expect(html).toMatch(/<details class="frameFieldGroup frameContextGroup"><summary>/u);
-        expect(html).toMatch(/<details class="technicalDetails"><summary>/u);
+        expect(html).toMatch(/id="inspector-panel-context"[^>]*hidden=""/u);
+        expect(html).toMatch(/id="inspector-panel-technical"[^>]*hidden=""/u);
+        expect(html).toContain('class="frameFieldGroup frameContextGroup" open=""');
     });
     it("keeps the compact Continuity summary closed initially", () => {
         const html = render(project([frame("f1", 1, "CONTINUE_PREVIOUS_FRAME")]));
@@ -79,16 +80,16 @@ describe("Frame Workspace polish", () => {
         expect(openedFrameCandidate(candidates, "g2")?.id).toBe("g2");
         expect(data.selectedGenerationId).toBe("g1");
         const html = render(project([data]));
-        expect(html).toContain("OPENED <strong>g1 · SUCCESS</strong>");
-        expect(html).toContain('class="status status-selected">SELECTED</span>');
+        expect(html).toContain("Просматривается <strong>g1 · Готов</strong>");
+        expect(html).toContain('class="status status-selected">Выбран</span>');
         expect(html).toContain("Выбрать");
         expect(html).toContain("Закрепить");
         expect(html).toContain("Repair");
         expect(html).toContain('title="Этот результат уже выбран" disabled=""');
         expect(html).toContain('title="Закрепить выбранный результат"');
         const locked = render(project([{ ...data, status: "LOCKED" }]));
-        expect(locked).toContain("Кадр <strong>LOCKED</strong>");
-        expect(locked).toContain('class="status status-locked">LOCKED</span>');
+        expect(locked).toContain("Кадр <strong>Закреплён</strong>");
+        expect(locked).toContain('class="status status-locked">Закреплён</span>');
         expect(locked).toContain('title="Кадр уже закреплён" disabled=""');
         expect(locked).toContain('title="Открыть Repair для этого результата"');
     });
@@ -102,23 +103,26 @@ describe("Frame Workspace polish", () => {
         const html = render(project([frame("f1", 1, "NEW_COMPOSITION")]), receipts);
         expect(html).toContain("История экспорта · 2");
         expect(html).toContain('aria-label="ChatGPT export receipt"');
-        expect(html).toContain("Нет выбранного receipt");
+        expect(html).toContain("Пакет для импорта не выбран");
     });
-    it("uses storyboard sequence order for heading and previous/next navigation", () => {
+    it("preserves backend order in Frame Workspace independently from Storyboard sorting", () => {
         const later = frame("f7", 7, "NEW_COMPOSITION");
         const earlier = frame("f2", 2, "NEW_COMPOSITION");
         expect(orderedSceneFrames([later, earlier]).map((item) => item.id)).toEqual(["f2", "f7"]);
         const html = render(project([later, earlier]));
-        expect(html).toContain("Сцена 1 · Кадр 1 из 2");
+        expect(html).toContain("Сцена 1 · Scene · Кадр 1 из 2");
+        expect(html.indexOf('title="S001_F007 · f7"')).toBeLessThan(html.indexOf('title="S001_F002 · f2"'));
         expect(html).toContain("S001_F002");
         expect(html).toContain('aria-label="Следующий кадр"');
     });
-    it("keeps every workspace section available behind the responsive menu", () => {
+    it("keeps workspace sections in the accessible collapsible Studio navigation", () => {
         const html = renderToStaticMarkup(React.createElement(QueryClientProvider, { client: new QueryClient() }, React.createElement(Workspace)));
-        expect(html).toContain('aria-label="Открыть меню"');
-        expect(html).toContain('aria-expanded="false"');
+        expect(html).toContain('aria-label="Свернуть навигацию"');
+        expect(html).toContain('aria-controls="studio-nav-content"');
+        expect(html).toContain('aria-expanded="true"');
         expect(html).toContain("Раскадровка");
-        expect(html).toContain("Генерации");
+        expect(html).toContain("История генераций");
+        expect(html).toContain("Образы");
         expect(html).toContain("Настройки");
     });
 });

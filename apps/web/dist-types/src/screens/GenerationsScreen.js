@@ -1,4 +1,7 @@
 import { jsx as _jsx, jsxs as _jsxs, Fragment as _Fragment } from "react/jsx-runtime";
+import { useFrameReviewActions } from "../components/useFrameReviewActions.js";
+import { LockConfirmationDialog } from "../components/LockConfirmationDialog.js";
+import { ReviewActionFeedback } from "../components/FrameReviewWorkspace.js";
 import React from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Check, Download, Upload } from "lucide-react";
@@ -6,15 +9,15 @@ import { api } from "../api.js";
 import { useUiStore } from "../state.js";
 import { projectFileUrl, readFileAsDataUrl, splitLines } from "../utils.js";
 import { StatusBadge } from "../components/References.js";
-import { canLockFrame, canSelectFrameGeneration, FrameLockReadinessNotice, frameLockReadinessQueryKey, useFrameLockReadiness } from "../components/FrameLockReadiness.js";
+import { canSelectFrameGeneration, FrameLockReadinessNotice, frameLockReadinessQueryKey } from "../components/FrameLockReadiness.js";
 export function ReviewPanel({ project, target }) {
-    const queryClient = useQueryClient();
-    const readiness = useFrameLockReadiness(target?.frame.id);
-    const lock = useMutation({
-        mutationFn: () => api.post(`/api/frames/${target?.frame.id}/lock`, {}),
-        onSuccess: () => { void queryClient.invalidateQueries({ queryKey: ["project", project.id] }); void readiness.refetch(); }
-    });
-    return (_jsxs("section", { className: "sideSection", children: [_jsx("h2", { children: "\u041F\u0440\u043E\u0432\u0435\u0440\u043A\u0430 \u0440\u0435\u0437\u0443\u043B\u044C\u0442\u0430\u0442\u0430" }), target ? _jsxs(_Fragment, { children: [_jsxs("p", { className: "muted", children: [target.frame.frameCode, " \u00B7 ", target.generation.id.slice(0, 8), " \u00B7 ", target.generation.provider] }), target.generation.outputFilePath ? _jsx("img", { className: "reviewImage", src: projectFileUrl(project, target.generation.outputFilePath), alt: `Результат ${target.frame.frameCode}` }) : _jsx("div", { className: "imagePlaceholder", children: "\u041D\u0435\u0442 \u0438\u0437\u043E\u0431\u0440\u0430\u0436\u0435\u043D\u0438\u044F" }), _jsx("p", { className: "muted", children: target.isSelected ? target.frame.status === "LOCKED" ? "Выбран и закреплён" : "Выбран для закрепления" : "Сначала выберите этот результат в списке кандидатов." })] }) : _jsx("div", { className: "imagePlaceholder", children: "\u041E\u0442\u043A\u0440\u043E\u0439\u0442\u0435 \u0440\u0435\u0437\u0443\u043B\u044C\u0442\u0430\u0442 \u0434\u043B\u044F \u043F\u0440\u043E\u0432\u0435\u0440\u043A\u0438." }), target ? _jsx(FrameLockReadinessNotice, { readiness: readiness.data, loading: readiness.isPending }) : null, _jsxs("button", { disabled: !target || !canLockFrame(readiness.data, target.isSelected, target.generation.status, target.frame.status) || lock.isPending, onClick: () => lock.mutate(), children: [_jsx(Check, { size: 16 }), " \u0423\u0442\u0432\u0435\u0440\u0434\u0438\u0442\u044C \u0438 \u0437\u0430\u043A\u0440\u0435\u043F\u0438\u0442\u044C \u043A\u0430\u0434\u0440"] }), lock.error ? _jsx("p", { className: "warning", children: lock.error.message }) : null] }));
+    return _jsx(ReviewPanelSession, { project: project, target: target }, project.id + ":" + (target?.frame.id ?? "none"));
+}
+function ReviewPanelSession({ project, target }) {
+    const dirty = useUiStore(state => state.frameDraftDirty);
+    const actions = useFrameReviewActions(project, target?.frame, dirty);
+    const readiness = actions.readiness;
+    return (_jsxs("section", { className: "sideSection", children: [_jsx("h2", { children: "\u041F\u0440\u043E\u0432\u0435\u0440\u043A\u0430 \u0440\u0435\u0437\u0443\u043B\u044C\u0442\u0430\u0442\u0430" }), target ? _jsxs(_Fragment, { children: [_jsxs("p", { className: "muted", children: [target.frame.frameCode, " \u00B7 ", target.generation.id.slice(0, 8), " \u00B7 ", target.generation.provider] }), target.generation.outputFilePath ? _jsx("img", { className: "reviewImage", src: projectFileUrl(project, target.generation.outputFilePath), alt: `Результат ${target.frame.frameCode}` }) : _jsx("div", { className: "imagePlaceholder", children: "\u041D\u0435\u0442 \u0438\u0437\u043E\u0431\u0440\u0430\u0436\u0435\u043D\u0438\u044F" }), _jsx("p", { className: "muted", children: target.isSelected ? target.frame.status === "LOCKED" ? "Выбран и закреплён" : "Выбран для закрепления" : "Сначала выберите этот результат в списке кандидатов." })] }) : _jsx("div", { className: "imagePlaceholder", children: "\u041E\u0442\u043A\u0440\u043E\u0439\u0442\u0435 \u0440\u0435\u0437\u0443\u043B\u044C\u0442\u0430\u0442 \u0434\u043B\u044F \u043F\u0440\u043E\u0432\u0435\u0440\u043A\u0438." }), target ? _jsx(FrameLockReadinessNotice, { readiness: readiness.data, loading: readiness.isPending }) : null, _jsxs("button", { disabled: !target?.isSelected || !actions.canLock, onClick: actions.requestLock, children: [_jsx(Check, { size: 16 }), " \u0423\u0442\u0432\u0435\u0440\u0434\u0438\u0442\u044C \u0438 \u0437\u0430\u043A\u0440\u0435\u043F\u0438\u0442\u044C \u043A\u0430\u0434\u0440"] }), _jsx(ReviewActionFeedback, { actions: actions }), _jsx(LockConfirmationDialog, { confirmation: actions.confirmation, pending: actions.busy, onConfirm: actions.confirmLock, onCancel: actions.cancelLock })] }));
 }
 export function GenerationsScreen({ project }) {
     const queryClient = useQueryClient();

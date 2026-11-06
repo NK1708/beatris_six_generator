@@ -80,7 +80,16 @@ describe("Scene Catalog", () => {
         expect(html).toContain("1</strong> на проверке");
         expect(html).toContain("2</strong> остальных");
         expect(html).toContain('aria-valuenow="25"');
+        expect(html).toContain("Прогресс закрепления кадров");
+        expect(html).toContain('aria-valuetext="Закреплено 1 из 4 кадров"');
+        expect(html).not.toContain("Production Readiness");
         expect(html).toContain("Редактор");
         expect(html).toContain("Раскадровка");
+    });
+    it("explains how to start when there are no scenes", () => {
+        const html = renderToStaticMarkup(React.createElement(QueryClientProvider, { client: new QueryClient() }, React.createElement(ScenesScreen, { project: { ...project, scenes: [] } })));
+        expect(html).toContain("В проекте пока нет сцен");
+        expect(html).toContain("Новая сцена");
+        expect(html).not.toContain('role="progressbar"');
     });
 });

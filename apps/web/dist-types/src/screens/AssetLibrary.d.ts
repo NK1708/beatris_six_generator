@@ -7,8 +7,9 @@ export declare function frameToDraft(frame: Frame): FrameDraft;
 export declare function DeleteProjectPanel({ project }: {
     project: Project;
 }): React.JSX.Element;
-export declare function CharactersScreen({ project }: {
+export declare function CharactersScreen({ project, outfitsOnly }: {
     project: Project;
+    outfitsOnly?: boolean;
 }): React.JSX.Element;
 export declare function LocationsScreen({ project }: {
     project: Project;

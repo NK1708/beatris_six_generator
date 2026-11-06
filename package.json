@@ -3,13 +3,21 @@
   "private": true,
   "version": "0.1.0",
   "type": "module",
+  "engines": {
+    "node": ">=20.18 <23",
+    "npm": ">=10"
+  },
   "workspaces": [
     "apps/*",
     "packages/*"
   ],
   "scripts": {
+    "predev": "npm run build:packages",
     "dev": "concurrently -k -n api,web -c cyan,magenta \"npm:dev -w apps/api\" \"npm:dev -w apps/web\"",
+    "build:packages": "npm run build -w packages/shared && npm run build -w packages/core",
     "build": "npm run build -w packages/shared && npm run build -w packages/core && npm run build -w apps/api && npm run build -w apps/web",
+    "setup": "node scripts/setup.mjs",
+    "doctor": "node scripts/doctor.mjs",
     "typecheck": "tsc -b",
     "test": "vitest run",
     "prisma:generate": "prisma generate",

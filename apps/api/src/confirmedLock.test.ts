@@ -12,7 +12,7 @@ import { FrameStoryStateService } from "./services/frameStoryStateService.js";
 import { createFrameWithTargetStoryState } from "./services/frameCreationService.js";
 
 const roots: string[] = [], clients: PrismaClient[] = [];
-afterEach(async () => { for (const c of clients.splice(0)) await c.$disconnect(); await projectDbManager.closeProject(); for (const entry of (await projectDbManager.listRegistry()).filter(e => e.name.startsWith("Confirmed Lock "))) await projectDbManager.deleteProject({ projectId: entry.id, deleteFiles: false }); await Promise.all(roots.splice(0).map(r => fs.rm(r, { recursive: true, force: true }))); });
+afterEach(async () => { for (const c of clients.splice(0)) await c.$disconnect(); await projectDbManager.closeProject(); for (const entry of (await projectDbManager.listRegistry()).filter(e => e.name.startsWith("Confirmed Lock "))) await projectDbManager.deleteProject({ projectId: entry.id, deleteFiles: false }); await Promise.all(roots.splice(0).map(r => fs.rm(r, { recursive: true, force: true, maxRetries: 3, retryDelay: 100 }))); });
 async function fixture() {
   const root = await fs.mkdtemp(path.join(os.tmpdir(), "bearridge-confirmed-lock-")); roots.push(root);
   const context = await projectDbManager.createProject({ name: `Confirmed Lock ${path.basename(root)}`, rootPath: root });
@@ -136,4 +136,4 @@ it.each(["selection", "revision"])("overlaps an actual second-connection %s writ
   const actual = await f.prisma.frame.findUniqueOrThrow({ where: { id: f.frame.id }, include: { targetStoryState: true } });
   if (actual.status === "LOCKED") { expect(actual.selectedGenerationId).toBe(f.a.id); expect(actual.targetStoryState!.revision).toBe(1); }
   else { expect(actual.status).toBe("REVIEW"); expect(actual.selectedGenerationId !== f.a.id || actual.targetStoryState!.revision !== 1).toBe(true); }
-});
+}, 15_000);

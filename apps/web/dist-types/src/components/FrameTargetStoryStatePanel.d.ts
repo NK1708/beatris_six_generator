@@ -1,6 +1,7 @@
 import React from "react";
 import { type AvailableFrameTargetStoryStateResponse, type FrameTargetStoryStateResponse, type StoryStateDocument } from "@bearridge/shared";
 import type { Character, FrameStatus } from "../model.js";
+import type { TargetComparisonSource } from "../targetStateComparison.js";
 export declare const frameTargetStoryStateQueryKey: (frameId: string) => readonly ["frame-target-story-state", string];
 export interface TargetStoryStateEditSession {
     frameId: string;
@@ -11,10 +12,14 @@ export interface TargetStoryStateEditSession {
 export declare function createTargetStoryStateEditSession(target: AvailableFrameTargetStoryStateResponse): TargetStoryStateEditSession;
 export declare function isTargetStoryStateDirty(session: TargetStoryStateEditSession): boolean;
 export declare function validateTargetStoryState(document: StoryStateDocument): string[];
-export declare function FrameTargetStoryStatePanel({ frameId, frameStatus, characters }: {
+export declare function FrameTargetStoryStatePanel({ frameId, frameStatus, characters, onDirtyChange, workspace, source, castIds }: {
+    workspace?: boolean;
+    source?: TargetComparisonSource;
+    castIds?: string[];
     frameId: string | null;
     frameStatus: FrameStatus | null;
     characters: Character[];
+    onDirtyChange?: (dirty: boolean) => void;
 }): React.JSX.Element;
 export declare function FrameTargetStoryStateView({ response, loading, requestError, frameStatus, characters, onEdit }: {
     response?: FrameTargetStoryStateResponse | undefined;
@@ -24,7 +29,12 @@ export declare function FrameTargetStoryStateView({ response, loading, requestEr
     characters?: Character[] | undefined;
     onEdit?: (() => void) | undefined;
 }): React.JSX.Element;
-export declare function TargetStoryStateEditor({ session, characters, frameStatus, saving, validationErrors, saveError, conflict, onChange, onSave, onCancel, onContinue, onLoadLatest }: {
+export declare function TargetStoryStateEditor({ session, characters, frameStatus, saving, validationErrors, saveError, conflict, onChange, onSave, onCancel, onContinue, onLoadLatest, fullSize, source, castIds, environmentPending, onEnvironmentPendingChange }: {
+    fullSize?: boolean;
+    source?: TargetComparisonSource | undefined;
+    castIds?: string[];
+    environmentPending?: boolean;
+    onEnvironmentPendingChange?: ((pending: boolean) => void) | undefined;
     session: TargetStoryStateEditSession;
     characters: Character[];
     frameStatus: FrameStatus | null;

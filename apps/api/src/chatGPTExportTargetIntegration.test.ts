@@ -10,6 +10,7 @@ import {
   type ChatGPTExportDependencies
 } from "./services/chatGPTExportService.js";
 import { importChatGPTResult } from "./services/chatGPTImportService.js";
+import { FrameStoryStateService } from "./services/frameStoryStateService.js";
 
 const temporaryDirectories: string[] = [];
 
@@ -103,6 +104,53 @@ describe("manual ChatGPT export target integration", () => {
     expect(receipt.fullTargetPrompt).not.toContain("predecessor-target-not-baseline");
     expect(exported.prompt).not.toContain(receipt.fullTargetPrompt);
     expect(exported.manifest.references).toEqual([]);
+  });
+
+  it.each([true, false])("exports exactly the saved Webster pose/position diff (changed=%s)", async changed => {
+    const fixture = await createFixture();
+    const { frame, predecessor, selected } = await createContinuation(fixture);
+    const webster = await fixture.prisma.character.create({ data: { projectId: fixture.project.id, name: "Webster", slug: "webster", status: "LOCKED" } });
+    const identity = await fixture.prisma.characterReference.create({ data: { characterId: webster.id, type: "MASTER", version: 1, code: "WEBSTER_MASTER_V1", filePath: "generations/selected.png", status: "LOCKED", isCanonical: true } });
+    await fixture.prisma.character.update({ where: { id: webster.id }, data: { masterReferenceId: identity.id } });
+    const outfit = await fixture.prisma.outfit.create({ data: { characterId: webster.id, name: "Suit", slug: "suit", status: "LOCKED" } });
+    const outfitRef = await fixture.prisma.outfitReference.create({ data: { outfitId: outfit.id, type: "MASTER", version: 1, code: "WEBSTER_SUIT_V1", filePath: "generations/selected.png", status: "LOCKED", isCanonical: true } });
+    await fixture.prisma.outfit.update({ where: { id: outfit.id }, data: { masterReferenceId: outfitRef.id } });
+    for (const id of [predecessor.id, frame.id]) await fixture.prisma.frameCharacter.create({ data: { frameId: id, characterId: webster.id, order: 1 } });
+    const baseline = { ...state(fixture.sceneId, "same"), characters: { [webster.id]: { present: true, outfitId: outfit.id, pose: "Sitting on the sofa.", locationPosition: "At the centre of the sofa.", emotion: "calm", heldProps: ["Key"] } } };
+    await fixture.prisma.generation.update({ where: { id: selected.id }, data: { storyStateSnapshot: JSON.stringify(baseline) } });
+    await fixture.prisma.frameStoryState.create({ data: { frameId: predecessor.id, document: JSON.stringify({ ...baseline, time: { description: "WRONG MUTABLE TARGET" } }), originType: "EXPLICIT" } });
+    await fixture.prisma.frameStoryState.update({ where: { frameId: frame.id }, data: { document: JSON.stringify(baseline) } });
+    const pose = "Standing upright just inside the room, arms relaxed at his sides, facing Birdman.";
+    const position = "Just inside the office lounge, near the left end of the brown sofa, a short distance from the open doorway.";
+    const target = structuredClone(baseline);
+    if (changed) { target.characters[webster.id]!.pose = pose; target.characters[webster.id]!.locationPosition = position; }
+    const saved = await new FrameStoryStateService(fixture.prisma).updateFrameTargetStoryState(frame.id, target, 1);
+    expect(saved.revision).toBe(changed ? 2 : 1);
+    const historicalBefore = await fixture.prisma.generation.findUniqueOrThrow({ where: { id: selected.id } });
+    const frameBefore = await fixture.prisma.frame.findUniqueOrThrow({ where: { id: frame.id } });
+    const exported = await createChatGPTExport(frame.id);
+    const entries = unzipSync(exported.buffer);
+    const zipPrompt = strFromU8(entries["S001_F002_CHATGPT/01_CHATGPT_PROMPT.txt"]!);
+    const zipManifest = JSON.parse(strFromU8(entries["S001_F002_CHATGPT/manifest.json"]!)) as { continuityEditContract: { changes: string[]; allowedChanges: string[]; forbidden: string[] } };
+    const contract = zipManifest.continuityEditContract;
+    expect(contract).toEqual(exported.manifest.continuityEditContract);
+    expect(contract.changes).toHaveLength(changed ? 2 : 0);
+    const changeOnly = zipPrompt.split("## CHANGE ONLY\n")[1]!.split("\n## DECLARED PROP CONTEXT")[0]!;
+    if (changed) {
+      expect(contract.changes.filter(line => line.includes(": pose:"))).toHaveLength(1);
+      expect(contract.changes.filter(line => line.includes(": position:"))).toHaveLength(1);
+      expect(changeOnly).toContain(pose); expect(changeOnly).toContain(position);
+      expect(contract.allowedChanges).toEqual(["character.position", "character.pose"]);
+      expect(changeOnly).not.toContain("None specified.");
+    } else { expect(changeOnly.trim()).toBe("- None specified."); expect(contract.allowedChanges).toEqual([]); }
+    expect(changeOnly).not.toContain("calm"); expect(changeOnly).not.toContain("Key"); expect(zipPrompt).not.toContain("WRONG MUTABLE TARGET");
+    expect(zipPrompt).toContain("Everything not explicitly listed under CHANGE ONLY must remain visually unchanged.");
+    expect(zipManifest.continuityEditContract.forbidden).toEqual([]);
+    expect(exported.manifest.base?.generationId).toBe(selected.id);
+    expect(await fixture.prisma.generation.findUniqueOrThrow({ where: { id: selected.id } })).toEqual(historicalBefore);
+    expect(await fixture.prisma.frame.findUniqueOrThrow({ where: { id: frame.id } })).toEqual(frameBefore);
+    const receipt = JSON.parse(await fs.readFile(path.join(fixture.directory, "exports", "chatgpt", `${exported.exportId}.json`), "utf8")) as { manifest: { continuityEditContract: unknown } };
+    expect(receipt.manifest.continuityEditContract).toEqual(contract);
   });
 
   it.each(["revision", "document", "selection", "base"] as const)("rejects stale %s without publishing a receipt", async (kind) => {

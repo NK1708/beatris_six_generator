@@ -33,7 +33,12 @@ describe("LOCKED Frame Workspace", () => {
     expect(html).toContain("Постановка и контекст доступны только для просмотра");
     expect(html).toContain("Просмотр кадра");
     expect(html).toContain("Детали результата");
-    expect(html.indexOf("targetStoryState")).toBeGreaterThan(end);
+    // Target now lives in the central surface, outside the staging fieldset.
+    const targetSurface = html.indexOf('id="frame-state-surface"');
+    expect(targetSurface).toBeGreaterThan(0);
+    expect(targetSurface).toBeLessThan(start);
+    expect(html).toMatch(/id="frame-state-surface" hidden=""/u);
+    expect(html.match(/class="targetWorkspaceEditor"/gu)).toHaveLength(1);
     expect(html.indexOf('aria-label="СЦЕНА"')).toBe(-1);
     expect(html.indexOf("Сцена<select")).toBeLessThan(start);
   });

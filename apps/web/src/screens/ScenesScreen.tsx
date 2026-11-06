@@ -4,9 +4,10 @@ import { ArrowLeft, Clapperboard, LayoutGrid, Loader2, MapPin, Plus, Save } from
 import { api } from "../api.js";
 import type { Project, Scene, SceneDraft } from "../model.js";
 import { sceneCatalogStats, sceneIdentifier } from "../sceneCatalog.js";
-import { useUiStore } from "../state.js";
+import { confirmFrameNavigation, useUiStore } from "../state.js";
 import { emptySceneDraft, sceneToDraft } from "./AssetLibrary.js";
 import { StoryStateEditor } from "./FrameWorkspace.js";
+import { sceneCreateFields } from "../sceneCreation.js";
 
 type SceneView = "catalog" | "editor";
 
@@ -19,10 +20,21 @@ export function ScenesScreen({ project }: { project: Project }) {
   const [view, setView] = React.useState<SceneView>("catalog");
   const [draft, setDraft] = React.useState<SceneDraft>(emptySceneDraft(project));
   const [edit, setEdit] = React.useState<SceneDraft>(emptySceneDraft(project));
+  const [storyDirty, setStoryDirty] = React.useState(false);
+  const setSceneDraftDirty = useUiStore(state => state.setSceneDraftDirty);
+  const hasSceneChanges = selected ? JSON.stringify(edit) !== JSON.stringify(sceneToDraft(selected)) : false;
+  const dirty = view === "editor" && (hasSceneChanges || storyDirty);
+  React.useEffect(() => { setSceneDraftDirty(dirty); }, [dirty, setSceneDraftDirty]);
+  React.useEffect(() => () => setSceneDraftDirty(false), [setSceneDraftDirty]);
+  React.useEffect(() => {
+    const warn = (event: BeforeUnloadEvent) => { if (dirty) { event.preventDefault(); event.returnValue = ""; } };
+    window.addEventListener("beforeunload", warn);
+    return () => window.removeEventListener("beforeunload", warn);
+  }, [dirty]);
   const refresh = () => queryClient.invalidateQueries({ queryKey: ["project", project.id] });
 
   const createScene = useMutation({
-    mutationFn: () => api.post<Scene>("/api/scenes", { projectId: project.id, sequence: project.scenes.length + 1, ...draft }),
+    mutationFn: () => api.post<Scene>("/api/scenes", { projectId: project.id, sequence: project.scenes.length + 1, ...sceneCreateFields(draft) }),
     onSuccess: (scene) => {
       selectScene(scene.id);
       setDraft(emptySceneDraft(project));
@@ -39,29 +51,39 @@ export function ScenesScreen({ project }: { project: Project }) {
     if (selected) setEdit(sceneToDraft(selected));
   }, [selected?.id]);
 
-  const hasSceneChanges = selected ? JSON.stringify(edit) !== JSON.stringify(sceneToDraft(selected)) : false;
   const openEditor = (scene: Scene) => {
     selectScene(scene.id);
+    if (useUiStore.getState().selectedSceneId !== scene.id) return;
+    setStoryDirty(false);
     setView("editor");
   };
   const openStoryboard = (scene: Scene) => {
     selectScene(scene.id);
+    if (useUiStore.getState().selectedSceneId !== scene.id) return;
     setSection("storyboard");
   };
 
   if (view === "editor" && selected) {
     return (
       <SceneEditor
+        key={selected.id}
         project={project}
         scene={selected}
         edit={edit}
         hasChanges={hasSceneChanges}
         isSaving={updateScene.isPending}
         saveError={updateScene.error?.message}
-        onBack={() => setView("catalog")}
+        onBack={() => {
+          if (!confirmFrameNavigation(useUiStore.getState(), true)) return;
+          setEdit(sceneToDraft(selected));
+          setStoryDirty(false);
+          setSceneDraftDirty(false);
+          setView("catalog");
+        }}
         onChange={setEdit}
         onSave={() => updateScene.mutate()}
         onOpenStoryboard={() => openStoryboard(selected)}
+        onStoryDirtyChange={setStoryDirty}
         stats={sceneCatalogStats(selected)}
       />
     );
@@ -88,7 +110,7 @@ export function ScenesScreen({ project }: { project: Project }) {
 
       {project.scenes.length ? <div className="sceneCatalogGrid">
         {project.scenes.map((scene) => <SceneCatalogCard key={scene.id} project={project} scene={scene} selected={scene.id === selected?.id} onEdit={() => openEditor(scene)} onStoryboard={() => openStoryboard(scene)} />)}
-      </div> : <div className="storyboardEmpty">Создайте первую сцену, чтобы начать работу с историей.</div>}
+      </div> : <div className="sceneCatalogEmpty"><h3>В проекте пока нет сцен</h3><p>Создайте первую сцену через «Новая сцена», затем настройте участников и состояние истории.</p></div>}
     </section>
   );
 }
@@ -118,8 +140,8 @@ function SceneCatalogCard({ project, scene, selected, onEdit, onStoryboard }: {
         <span><strong>{stats.review}</strong> на проверке</span>
         <span><strong>{stats.other}</strong> остальных</span>
       </div>
-      <div className="sceneProgressLabel"><span>Готовность</span><strong>{stats.readinessPercent}%</strong></div>
-      <div className="sceneProgress" role="progressbar" aria-label={`Готовность ${sceneIdentifier(scene)}`} aria-valuemin={0} aria-valuemax={100} aria-valuenow={stats.readinessPercent}><span style={{ width: `${stats.readinessPercent}%` }} /></div>
+      <div className="sceneProgressLabel"><span>Прогресс закрепления кадров</span><strong>{stats.readinessPercent}%</strong></div>
+      <div className="sceneProgress" role="progressbar" aria-label={`Прогресс закрепления кадров ${sceneIdentifier(scene)}`} aria-valuetext={`Закреплено ${stats.locked} из ${stats.total} кадров`} aria-valuemin={0} aria-valuemax={100} aria-valuenow={stats.readinessPercent}><span style={{ width: `${stats.readinessPercent}%` }} /></div>
       <div className="sceneCardActions">
         <button type="button" onClick={onEdit}><Clapperboard size={16} /> Редактор</button>
         <button type="button" onClick={onStoryboard}><LayoutGrid size={16} /> Раскадровка</button>
@@ -128,7 +150,7 @@ function SceneCatalogCard({ project, scene, selected, onEdit, onStoryboard }: {
   );
 }
 
-function SceneEditor({ project, scene, edit, hasChanges, isSaving, saveError, stats, onBack, onChange, onSave, onOpenStoryboard }: {
+function SceneEditor({ project, scene, edit, hasChanges, isSaving, saveError, stats, onBack, onChange, onSave, onOpenStoryboard, onStoryDirtyChange }: {
   project: Project;
   scene: Scene;
   edit: SceneDraft;
@@ -140,6 +162,7 @@ function SceneEditor({ project, scene, edit, hasChanges, isSaving, saveError, st
   onChange(next: SceneDraft): void;
   onSave(): void;
   onOpenStoryboard(): void;
+  onStoryDirtyChange(dirty: boolean): void;
 }) {
   return (
     <section className="sceneEditor">
@@ -179,7 +202,7 @@ function SceneEditor({ project, scene, edit, hasChanges, isSaving, saveError, st
       <details className="sceneStoryState">
         <summary>Текущее состояние сцены</summary>
         <p className="muted">Авторитетное текущее состояние сцены, используемое её кадрами.</p>
-        <StoryStateEditor project={project} />
+        <StoryStateEditor project={project} onDirtyChange={onStoryDirtyChange} />
       </details>
     </section>
   );

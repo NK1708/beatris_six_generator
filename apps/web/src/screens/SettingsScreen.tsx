@@ -28,7 +28,7 @@ export function SettingsScreen({ project }: { project: Project }) {
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["project", project.id] })
   });
   return (
-    <section className="fieldStack">
+    <section className="fieldStack settingsForm" aria-label="Настройки проекта">
       <div className="toolbar"><h2>Настройки</h2><button onClick={() => save.mutate()}><Save size={16} /> Сохранить</button></div>
       <div className="refRow"><Settings size={15} /><span>API</span><small>{health.data?.ok ? `готов / ${health.data.provider}` : "проверка..."}</small></div>
       <label>Fallback aspect ratio<input value={draft.defaultAspectRatio} onChange={(event) => setDraft({ ...draft, defaultAspectRatio: event.target.value })} /></label>

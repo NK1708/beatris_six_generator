@@ -237,7 +237,7 @@ export function DeleteProjectPanel({ project }: { project: Project }) {
   );
 }
 
-export function CharactersScreen({ project }: { project: Project }) {
+export function CharactersScreen({ project, outfitsOnly = false }: { project: Project; outfitsOnly?: boolean }) {
   const queryClient = useQueryClient();
   const selectedId = useUiStore((state) => state.selectedCharacterId);
   const selectCharacter = useUiStore((state) => state.selectCharacter);
@@ -271,7 +271,7 @@ export function CharactersScreen({ project }: { project: Project }) {
       <div className="entityList">
         <h2>Персонажи</h2>
         {project.characters.map((character) => (
-          <button className={character.id === selected?.id ? "active listButton" : "listButton"} key={character.id} onClick={() => selectCharacter(character.id)}>
+          <button className={character.id === selected?.id ? "active listButton" : "listButton"} key={character.id} onClick={() => { selectCharacter(character.id); if (outfitsOnly) useUiStore.getState().setSection("outfits"); }}>
             <User size={15} /> {character.name}
           </button>
         ))}
@@ -286,7 +286,7 @@ export function CharactersScreen({ project }: { project: Project }) {
       <div className="entityDetail">
         {selected ? (
           <>
-            <div className="toolbar">
+            {outfitsOnly ? <div className="fieldStack"><h2>Образы · {selected.name}</h2><p className="muted">Образы принадлежат выбранному персонажу. Выберите персонажа слева для работы с его образами.</p></div> : <><div className="toolbar">
               <h2>{selected.name}</h2>
               <button disabled={!hasCharacterChanges || !edit.name.trim() || updateCharacter.isPending} onClick={() => updateCharacter.mutate()}>{updateCharacter.isPending ? <Loader2 className="spin" size={16} /> : <Save size={16} />} Сохранить</button>
             </div>
@@ -302,7 +302,7 @@ export function CharactersScreen({ project }: { project: Project }) {
               <label>Неизменяемые признаки<textarea value={edit.immutableFeatures} onChange={(event) => setEdit({ ...edit, immutableFeatures: event.target.value })} /></label>
             </div>
             {updateCharacter.error ? <p className="warning">{updateCharacter.error.message}</p> : null}
-            <ReferenceSlots project={project} ownerType="character" ownerId={selected.id} references={selected.references} slots={characterSlots} onChanged={refresh} />
+            <ReferenceSlots project={project} ownerType="character" ownerId={selected.id} references={selected.references} slots={characterSlots} onChanged={refresh} /></>}
             <section className="sideSection">
               <div className="toolbar"><h3>Образы</h3><button onClick={() => createOutfit.mutate(`Образ ${selected.outfits.length + 1}`)}><Box size={16} /> Новый образ</button></div>
               {selected.outfits.map((outfit) => (

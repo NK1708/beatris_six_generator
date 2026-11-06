@@ -1,5 +1,6 @@
 import express, { type NextFunction, type Request, type Response } from "express";
 import cors from "cors";
+import { ZodError } from "zod";
 import { consistencyBenchmarkSceneName, createEmptyStoryState, initialConsistencyBenchmarkFrames, referenceVersionCode, slugify } from "@bearridge/core";
 import {
   createCharacterSchema,
@@ -17,6 +18,7 @@ import {
   exportGenerationRepairSchema,
   frameTargetRecoveryRequestSchema,
   lockFrameSchema,
+  confirmFrameLockSchema,
   openProjectSchema,
   saveStoryStateSchema,
   selectFrameGenerationSchema,
@@ -44,7 +46,7 @@ import { importChatGPTResult, listChatGPTExports } from "./services/chatGPTImpor
 import { createLocationAngle, lockReferenceAsCanonical, setReferenceStatus, uploadReferenceVersion } from "./services/referenceService.js";
 import { updateFrameContext } from "./services/frameContextService.js";
 import { updateFrame } from "./services/frameUpdateService.js";
-import { GenerationReviewError, lockFrameWithSelectedGeneration, selectGenerationForFrame } from "./services/generationReviewService.js";
+import { GenerationReviewError, lockFrameWithConfirmation, lockFrameWithSelectedGeneration, selectGenerationForFrame } from "./services/generationReviewService.js";
 import { getFrameLockReadiness } from "./services/frameLockReadinessService.js";
 import { ProductionGenerationReadinessError } from "./services/productionGenerationGate.js";
 import { createFrameWithTargetStoryState } from "./services/frameCreationService.js";
@@ -290,8 +292,14 @@ export function createApp() {
 
   app.post("/api/scenes", asyncHandler(async (request, response) => {
     const input = createSceneSchema.parse(request.body);
-    const { prisma } = projectDbManager.getActiveProject();
+    const { prisma, project } = projectDbManager.getActiveProject();
     const styleProfileId = input.styleProfileId ?? input.styleId ?? null;
+    if (input.projectId !== project.id || input.characterIds.length !== new Set(input.characterIds).size
+      || (input.locationId !== undefined && !await prisma.location.findFirst({ where: { id: input.locationId, projectId: input.projectId } }))
+      || (styleProfileId !== null && !await prisma.styleProfile.findFirst({ where: { id: styleProfileId, projectId: input.projectId } }))
+      || await prisma.character.count({ where: { projectId: input.projectId, id: { in: input.characterIds } } }) !== new Set(input.characterIds).size) {
+      throw new AppError("Scene context must belong to the active project.", 400, "INVALID_SCENE_CONTEXT");
+    }
     const scene = await prisma.scene.create({
       data: {
         projectId: input.projectId,
@@ -478,6 +486,12 @@ export function createApp() {
     response.json(await lockFrameWithSelectedGeneration(prisma, projectPath, input.frameId));
   }));
 
+  app.post("/api/frames/:frameId/lock-confirmed", asyncHandler(async (request, response) => {
+    const input = confirmFrameLockSchema.parse(request.body);
+    const { prisma, projectPath } = projectDbManager.getActiveProject();
+    response.json(await lockFrameWithConfirmation(prisma, projectPath, requiredParam(request, "frameId"), input));
+  }));
+
   app.post("/api/projects/:projectId/benchmark/seed", asyncHandler(async (request, response) => {
     const input = seedBenchmarkSchema.parse({ ...request.body, projectId: requiredParam(request, "projectId") });
     const projectId = input.projectId;
@@ -616,6 +630,14 @@ export function createApp() {
   }));
 
   app.use((error: unknown, _request: Request, response: Response, _next: NextFunction) => {
+    if (error instanceof SyntaxError && "type" in error && error.type === "entity.parse.failed") {
+      response.status(400).json({ error: "Invalid JSON request.", code: "VALIDATION_ERROR" });
+      return;
+    }
+    if (error instanceof ZodError) {
+      response.status(400).json({ error: "Invalid request.", code: "VALIDATION_ERROR", issues: error.issues.map(issue => ({ path: issue.path, message: issue.message })) });
+      return;
+    }
     if (error instanceof FrameStoryStateRecoveryError) {
       response.status(error.statusCode).json({ error: error.message, code: error.code, diagnostics: error.diagnostics });
       return;

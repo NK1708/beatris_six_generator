@@ -1,6 +1,7 @@
 import type { GenerationGeometryResult, ReferenceAsset } from "@bearridge/shared";
 import type { FrameContext } from "./domain.js";
 import { buildCompositionSafeAreaInstruction } from "./generationGeometryResolver.js";
+import { buildCharacterIdentityMap, buildPropState, buildPropRecordChanges, buildPropContinuationContext, promptCharacterIdentity } from "./propPrompt.js";
 
 export class PromptBuilder {
   build(context: FrameContext, references: ReferenceAsset[], geometry?: GenerationGeometryResult): string {
@@ -10,7 +11,7 @@ export class PromptBuilder {
       const state = context.storyState.characters[character.id];
       const outfit = character.outfits.find((candidate) => candidate.id === state?.outfitId);
       return [
-        `${character.name}:`,
+        `${promptCharacterIdentity(context, character.id)}:`,
         outfit ? `Outfit: ${outfit.name}` : "Outfit: unspecified",
         outfit?.description ? `Outfit description: ${outfit.description}` : "",
         outfit?.immutableFeatures ? `Outfit immutable features: ${outfit.immutableFeatures}` : "",
@@ -18,7 +19,6 @@ export class PromptBuilder {
         state?.emotion ? `Emotion: ${state.emotion}` : "",
         state?.pose ? `Pose: ${state.pose}` : "",
         state?.locationPosition ? `Position: ${state.locationPosition}` : "",
-        state?.heldProps?.length ? `Holding: ${state.heldProps.join(", ")}` : "",
         state?.notes?.length ? `Notes: ${state.notes.join("; ")}` : ""
       ].filter(Boolean);
     });
@@ -58,7 +58,7 @@ export class PromptBuilder {
       "",
       "CANONICAL ASSETS:",
       presentCharacters.map((character) => [
-        `Character: ${character.name}`,
+        `Character: ${character.name} [Character ID: ${JSON.stringify(character.id)}]`,
         character.description ? `Description: ${character.description}` : "",
         character.bodyDescription ? `Body: ${character.bodyDescription}` : "",
         character.faceDescription ? `Face: ${character.faceDescription}` : "",
@@ -95,9 +95,12 @@ export class PromptBuilder {
       presentCharacters.map((character) => character.name).join(", ") || "None",
       "",
       "CURRENT STORY STATE:",
+      buildCharacterIdentityMap(context, references),
       characterState.join("\n") || "No characters present.",
       `Time: ${context.storyState.time.description || context.scene.timeDescription || "unspecified"}`,
       environmentEntries.join("\n") || "No environment state specified.",
+      buildPropState(context),
+      context.frame.generationStrategy === "CONTINUE_PREVIOUS_FRAME" ? buildPropRecordChanges(context) : "",
       "",
       "FRAME INSTRUCTIONS:",
       "CAMERA:",
@@ -186,6 +189,7 @@ export class PromptBuilder {
       frame.lighting ? `Lighting change: ${frame.lighting}` : "",
       frame.expressionNotes ? `Expression / pose change: ${frame.expressionNotes}` : "",
       frame.continuityNotes ? `Continuity notes: ${frame.continuityNotes}` : "",
+      buildPropContinuationContext(context),
       `Current Story State: ${JSON.stringify(context.storyState)}`
     ].filter(Boolean).join("\n");
   }

@@ -1,3 +1,6 @@
+import { useFrameReviewActions } from "../components/useFrameReviewActions.js";
+import { LockConfirmationDialog } from "../components/LockConfirmationDialog.js";
+import { ReviewActionFeedback } from "../components/FrameReviewWorkspace.js";
 import React from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { BookOpen, Box, Brush, Check, Clapperboard, Download, Folder, ImagePlus, Loader2, Map, Play, Save, Settings, Trash2, Upload, User, X } from "lucide-react";
@@ -10,12 +13,12 @@ import { StatusBadge } from "../components/References.js";
 import type { ReviewTarget } from "../reviewTarget.js";
 import { canLockFrame, canSelectFrameGeneration, FrameLockReadinessNotice, frameLockReadinessQueryKey, useFrameLockReadiness } from "../components/FrameLockReadiness.js";
 export function ReviewPanel({ project, target }: { project: Project; target: ReviewTarget | null }) {
-  const queryClient = useQueryClient();
-  const readiness = useFrameLockReadiness(target?.frame.id);
-  const lock = useMutation({
-    mutationFn: () => api.post(`/api/frames/${target?.frame.id}/lock`, {}),
-    onSuccess: () => { void queryClient.invalidateQueries({ queryKey: ["project", project.id] }); void readiness.refetch(); }
-  });
+  return <ReviewPanelSession key={project.id + ":" + (target?.frame.id ?? "none")} project={project} target={target} />;
+}
+function ReviewPanelSession({ project, target }: { project: Project; target: ReviewTarget | null }) {
+  const dirty = useUiStore(state => state.frameDraftDirty);
+  const actions = useFrameReviewActions(project, target?.frame, dirty);
+  const readiness = actions.readiness;
   return (
     <section className="sideSection">
       <h2>Проверка результата</h2>
@@ -25,8 +28,8 @@ export function ReviewPanel({ project, target }: { project: Project; target: Rev
         <p className="muted">{target.isSelected ? target.frame.status === "LOCKED" ? "Выбран и закреплён" : "Выбран для закрепления" : "Сначала выберите этот результат в списке кандидатов."}</p>
       </> : <div className="imagePlaceholder">Откройте результат для проверки.</div>}
       {target ? <FrameLockReadinessNotice readiness={readiness.data} loading={readiness.isPending} /> : null}
-      <button disabled={!target || !canLockFrame(readiness.data, target.isSelected, target.generation.status, target.frame.status) || lock.isPending} onClick={() => lock.mutate()}><Check size={16} /> Утвердить и закрепить кадр</button>
-      {lock.error ? <p className="warning">{lock.error.message}</p> : null}
+      <button disabled={!target?.isSelected || !actions.canLock} onClick={actions.requestLock}><Check size={16} /> Утвердить и закрепить кадр</button>
+      <ReviewActionFeedback actions={actions} /><LockConfirmationDialog confirmation={actions.confirmation} pending={actions.busy} onConfirm={actions.confirmLock} onCancel={actions.cancelLock} />
     </section>
   );
 }

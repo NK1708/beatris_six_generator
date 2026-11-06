@@ -86,7 +86,7 @@ describe("frontend review safety", () => {
 
   it("keeps manual export/import, repair, selection and lock controls reachable", () => {
     const editor = render(React.createElement(FrameEditor, { project }));
-    expect(editor).toContain("Export for ChatGPT");
+    expect(editor).toContain("Экспорт для ChatGPT");
     expect(editor).toContain("Открыть кандидата");
     expect(editor).toContain("Текущее состояние сцены");
     expect(editor).toContain("Может отличаться от состояния на момент выбранного кадра.");
@@ -94,7 +94,7 @@ describe("frontend review safety", () => {
     expect(editor).toContain("Камера и постановка");
     expect(editor).toContain("Контекст и референсы");
     expect(editor).toContain("Production prompt");
-    expect(editor).toContain("Import ChatGPT Result");
+    expect(editor).toContain("Импорт результата ChatGPT");
     expect(editor).not.toContain("> Draft</button>");
     const candidates = render(React.createElement(GenerationsScreen, { project }));
     expect(candidates).toContain("Repair Generation");
@@ -155,7 +155,7 @@ describe("Frame Workspace visual context", () => {
     useUiStore.setState({ section: "frames", selectedSceneId: "scene", selectedFrameId: "f2", frameDraftDirty: false });
     const html = renderToStaticMarkup(React.createElement(QueryClientProvider, { client }, React.createElement(FrameEditor, { project: data })));
     expect(html).toContain("BASE · S001_F001");
-    expect(html).toContain("LOCKED");
+    expect(html).toContain("Закреплён");
     expect(html).toContain("g3.png");
     expect(continuation.selectedGenerationId).toBe("g3");
   });

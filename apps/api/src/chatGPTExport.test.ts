@@ -212,7 +212,9 @@ describe("ChatGPT export", () => {
             allowedChanges: ["camera"]
           }
         },
-        storyState: { characters: { hero: { present: true, outfitId: "outfit" } } },
+        scene: { characterIds: ["hero"] },
+        continuityBaseline: { status: "UNAVAILABLE", reason: "NOT_LOCKED" },
+        storyState: { sceneId: "scene", time: { description: "Morning" }, environment: {}, storyFacts: [], characters: { hero: { present: true, outfitId: "outfit", heldProps: ["Key"] } }, props: { Key: { holderCharacterId: "hero", location: "shelf" } } },
         characters: [{
           id: "hero",
           name: "Hero",
@@ -241,6 +243,10 @@ describe("ChatGPT export", () => {
     expect(names).toContain("S001_F002_CHATGPT/04_IDENTITY_REFERENCE_CHAR_HERO_PROFILE_LEFT_V1.png");
     expect(names.filter((name) => name.includes("IDENTITY_REFERENCE"))).toHaveLength(2);
     expect(manifest.base).toMatchObject({ frameId: "frame-1", generationId: "generation-1" });
+    expect(result.prompt).toContain('Holder association: "Hero" [Character ID: "hero"]');
+    expect(result.prompt).toContain('Recorded location: "shelf"');
+    expect(result.prompt).toContain('Recorded heldProps for "Hero" [Character ID: "hero"]: ["Key"]');
+    expect(result.prompt).toContain("It does not authorize edits outside CHANGE ONLY");
     expect(manifest.exportPolicy).toBe("CHATGPT_CONTINUATION_V2");
     expect(manifest.consumer).toBe("chatgpt-manual");
     expect(manifest.requestedAction).toBe("render");

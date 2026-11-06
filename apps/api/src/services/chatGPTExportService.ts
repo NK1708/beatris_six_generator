@@ -4,6 +4,7 @@ import { randomUUID } from "node:crypto";
 import { strToU8, zipSync } from "fflate";
 import type { ContinuityEditContract, FrameGenerationReadiness, FrameGenerationReadinessDiagnostic, FrameGenerationReadinessReason, FrameGenerationStrategy, ReferenceAsset } from "@bearridge/shared";
 import type { FrameContext } from "@bearridge/core";
+import { buildPortablePropContext, resolveContinuationExportContract } from "@bearridge/core";
 import { projectDbManager, type ProjectContext } from "../db.js";
 import { AppError } from "../errors.js";
 import { loadFrameContext } from "./contextService.js";
@@ -167,6 +168,7 @@ async function createChatGPTExportInProject(
   if (continuation && (!prepared.baseReference || !prepared.context.previousLockedFrame)) {
     throw new AppError("ChatGPT continuation export requires a selected successful Generation from the previous locked Frame.", 400, "INVALID_CONTINUATION_BASE");
   }
+  const exportContract = continuation ? resolveContinuationExportContract(prepared.context) : prepared.context.frame.continuityEditContract;
   const baseFileName = continuation
     ? `02_AUTHORITATIVE_BASE_${sanitizeName(prepared.context.previousLockedFrame!.frameCode)}${safeExtension(prepared.baseReference!.filePath)}`
     : undefined;
@@ -209,7 +211,7 @@ async function createChatGPTExportInProject(
       visualReferencesActuallyExported: visualReferences.map((reference) => reference.id),
       canonicalConstraints: canonicalConstraints!
     } : {}),
-    ...(prepared.strategy === "CONTINUE_PREVIOUS_FRAME" ? { continuityEditContract: prepared.context.frame.continuityEditContract } : {}),
+    ...(continuation ? { continuityEditContract: exportContract } : {}),
     ...(prepared.baseReference && prepared.context.previousLockedFrame ? {
       base: {
         frameId: prepared.context.previousLockedFrame.id,
@@ -231,7 +233,7 @@ async function createChatGPTExportInProject(
     attachments
   };
   const prompt = continuation
-    ? buildChatGPTContinuationPrompt(manifest, prepared.context.frame.continuityEditContract, prepared.allowedContinuityChanges, canonicalConstraints!)
+    ? buildChatGPTContinuationPrompt(manifest, exportContract, prepared.allowedContinuityChanges, canonicalConstraints!, prepared.context)
     : buildChatGPTNewCompositionPrompt(prepared.prompt, manifest);
   const zipEntries: Record<string, Uint8Array> = {
     [`${rootName}/00_README.txt`]: strToU8(buildPortableReadme()),
@@ -452,7 +454,8 @@ function buildChatGPTContinuationPrompt(
   manifest: ChatGPTExportManifest,
   contract: ContinuityEditContract,
   allowedChanges: string[],
-  constraints: CanonicalConstraints
+  constraints: CanonicalConstraints,
+  context: FrameContext
 ): string {
   const referenceList = manifest.references.flatMap((reference) => [
     `${reference.order}. ${reference.filename}`,
@@ -497,6 +500,10 @@ function buildChatGPTContinuationPrompt(
     ...referenceList,
     "## CHANGE ONLY",
     ...listOrNone(contract.changes),
+    "",
+    "## DECLARED PROP CONTEXT",
+    "Context for interpreting the declared changes only. It does not authorize edits outside CHANGE ONLY or add characters to the visible cast.",
+    buildPortablePropContext(context, manifest.references),
     "",
     "## ALLOWED CHANGE CATEGORIES",
     ...listOrNone(allowedChanges),

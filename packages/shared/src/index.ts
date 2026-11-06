@@ -630,6 +630,13 @@ export const lockFrameSchema = z.object({
   frameId: z.string()
 });
 
+export const confirmFrameLockSchema = z.object({
+  expectedGenerationId: z.string().trim().min(1),
+  expectedTargetRevision: z.number().int().positive()
+}).strict();
+
+export type ConfirmFrameLockInput = z.infer<typeof confirmFrameLockSchema>;
+
 export const selectFrameGenerationSchema = z.object({
   frameId: z.string(),
   generationId: z.string()

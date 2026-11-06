@@ -68,7 +68,7 @@ export function AdvancedToolsScreen({ project }: { project: Project }) {
 }
 
 export function ProjectOverview({ project }: { project: Project }) {
-  return <section className="frameEditor">
+  return <section className="projectOverview">
     <h2>Сводка проекта</h2>
     <div className="summaryGrid">
       <Metric label="Персонажи" value={project.characters.length} />
@@ -77,7 +77,10 @@ export function ProjectOverview({ project }: { project: Project }) {
       <Metric label="Сцены" value={project.scenes.length} />
     </div>
     <p className="muted">Данные проекта хранятся в его папке.</p>
-    <DeleteProjectPanel project={project} />
+    <details className="projectDangerDisclosure">
+      <summary>Удаление проекта</summary>
+      <DeleteProjectPanel project={project} />
+    </details>
   </section>;
 }
 
